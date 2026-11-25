@@ -1,0 +1,8 @@
+% ABSYS-E02: does the order of the assertions matter?
+% The goal is written before the procedure it applies is defined; in some
+% orders, before its list is known.
+app = lambda R, S, T
+    {R = [], S = T} or
+    {R = [X|L], T = [X|N], app(L, S, N)}
+app(R, S, T)
+T = [1,2]

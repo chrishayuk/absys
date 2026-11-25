@@ -1,0 +1,7 @@
+% Assertions are not assignments. Step through: each assertion is added to
+% the computation, and whatever can be done is done.
+X = Y        % two unknowns: the equation is suspended on both
+Y = Z        % another
+Z = 42       % Z is instantiated; Y = Z is reactivated, then X = Y
+A = [X, Y, Z]
+X = 17       % contradicts what is known: no derivation survives

@@ -1,0 +1,4 @@
+1 derivation:
+  derivation #2 (hibernating)
+    procedures  student, math-course, takes, non-maths-major
+    environment C₁/'C301'

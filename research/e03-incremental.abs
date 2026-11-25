@@ -1,0 +1,13 @@
+% ABSYS-E03: partial computation that waits for later assertions.
+% The goal comes first; the procedure it applies is defined after it, and
+% the equations that complete it come after that.
+A = [X, Y, Z]
+rev(A, B)
+X = Y
+rev = lambda R, S
+    {rev1(R, [], S)}
+rev1 = lambda R, S, T
+    {R = [], S = T} or
+    {R = [H|L], rev1(L, [H|S], T)}
+Y = Z
+B = [42|C]

@@ -1,0 +1,6 @@
+% Foster and Elcock 1969 (MI4): "after p=[1;2] {p = [a;b] or p = [b;a]}
+% there are two sets of distinct data ... If we were now to assert, for
+% example, a=b+1 one of the conjunctions will be unsatisfiable and will
+% disappear from the system together with its associated data."
+p=[1;2] {p = [a;b] or p = [b;a]}
+a=b+1

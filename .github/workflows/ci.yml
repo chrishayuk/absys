@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-wasip1
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Format
+        run: cargo fmt --all --check
+
+      - name: Lint
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test (the acceptance tests, the examples, the tutorial)
+        run: cargo test --release
+
+      - name: Verify the examples
+        run: cargo run --release -- verify
+
+      - name: The playground's WebAssembly build agrees with the native one
+        run: node web/build.mjs && node web/test.mjs
+
+      - name: The editor extension
+        working-directory: editors/vscode
+        run: npm ci && node build.mjs && npm test

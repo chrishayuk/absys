@@ -1,0 +1,5 @@
+1 derivation:
+  derivation #0 (hibernating)
+    x = 2
+    y = 2
+    environment x/2, y/2

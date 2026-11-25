@@ -1,0 +1,7 @@
+1 derivation:
+  derivation #11 (hibernating)
+    procedures  rev1, rev
+    U = 5
+    V = 5
+    L = [2,1]
+    environment U/5, V/5, L/[2,1], X₁/1, L₁/[2,5], X₂/2, L₂/[5], X₃/5, L₃/[], X₄/5, L₄/[]

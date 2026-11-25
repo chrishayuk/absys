@@ -1,0 +1,7 @@
+% Elcock 1990, p. 8 and pp. 9-10: append, and the goal app([1], U, [1,2]).
+app = lambda R, S, T
+    {R = [], S = T} or
+    {R = [X|L], T = [X|N], app(L, S, N)}
+
+app([1], U, [1,2])
+tout("U", U)

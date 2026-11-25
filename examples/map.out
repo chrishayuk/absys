@@ -1,0 +1,21 @@
+4 derivations:
+  derivation #13 (hibernating)
+    procedures  map, small
+    a = 1
+    b = 1
+    environment a/1, b/1, r₁/1, s₁/[1], r₂/1, s₂/[]
+  derivation #15 (hibernating)
+    procedures  map, small
+    a = 1
+    b = 2
+    environment a/1, b/2, r₁/1, s₁/[2], r₂/2, s₂/[]
+  derivation #17 (hibernating)
+    procedures  map, small
+    a = 2
+    b = 1
+    environment a/2, b/1, r₁/2, s₁/[1], r₂/1, s₂/[]
+  derivation #19 (hibernating)
+    procedures  map, small
+    a = 2
+    b = 2
+    environment a/2, b/2, r₁/2, s₁/[2], r₂/2, s₂/[]

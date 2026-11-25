@@ -1,0 +1,6 @@
+1 derivation:
+  derivation #2 (hibernating)
+    p = [1;2]
+    b = 1
+    a = 2
+    environment p/[1;2], b/1, a/2

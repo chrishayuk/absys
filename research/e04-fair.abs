@@ -1,0 +1,5 @@
+% ABSYS-E04: the first alternative never ends; the second is a refutation
+% at once. A fair search finds it; a depth-first one does not.
+loop = lambda X
+    {loop(X)}
+{loop(A)} or {A = 1}

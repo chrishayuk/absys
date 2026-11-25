@@ -1,0 +1,27 @@
+{
+  "procedure": {
+    "prefix": "lambda",
+    "body": ["${1:name} = lambda ${2:R, S}", "    {${3:R = []}} or", "    {${4:R = [X|L]}, ${1:name}(${5:L, S})}"],
+    "description": "A procedure: a lambda expression whose body is a disjunction (1990 notation)"
+  },
+  "alternatives": {
+    "prefix": "or",
+    "body": ["{${1}} or {${2}}"],
+    "description": "Alternatives: each becomes a derivation of its own"
+  },
+  "set": {
+    "prefix": "set",
+    "body": ["{set(${1:X}), {${2}}, ${3:S}}"],
+    "description": "Absys-4's aggregation: S is the set of the X for which the middle holds"
+  },
+  "tout": {
+    "prefix": "tout",
+    "body": ["tout(\"${1:U}\", ${1:U})"],
+    "description": "Output: writes U = … when U is complete"
+  },
+  "function (1969)": {
+    "prefix": "lambda1969",
+    "body": ["${1:f}'=lambda ${2:x}=>${3:z} key ${2:x}", "    begin ${4} end"],
+    "description": "A function with a result and a key, in the 1969 notation"
+  }
+}

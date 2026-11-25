@@ -1,0 +1,19 @@
+[package]
+name = "absys"
+version = "0.1.0"
+edition = "2021"
+license = "Apache-2.0"
+description = "A reconstruction of Absys (Aberdeen, 1967-68), the assertional language of Foster and Elcock: equations, suspended until they can be solved, and procedures that run in every direction"
+
+[lib]
+name = "absys"
+path = "src/lib.rs"
+
+[[bin]]
+name = "absys"
+path = "src/main.rs"
+
+[dependencies]
+
+[profile.dev]
+opt-level = 2

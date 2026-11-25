@@ -1,0 +1,6 @@
+1 derivation:
+  derivation #3 (hibernating)
+    output      U = [2]
+    procedures  app
+    U = [2]
+    environment U/[2], X₁/1, L₁/[], N₁/[2]

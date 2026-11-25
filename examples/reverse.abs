@@ -1,0 +1,10 @@
+% Elcock 1990, pp. 11-13: a simple example of suspended equations.
+rev1 = lambda R, S, T
+    {R = [], S = T} or
+    {R = [X|L], rev1(L, [X|S], T)}
+rev = lambda R, S
+    {rev1(R, [], S)}
+
+rev([1,2,U], [V|L])
+% the derivation hibernates with U = X₃ and X₃ = V suspended; now add:
+rev([5], [V])

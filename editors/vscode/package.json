@@ -1,0 +1,119 @@
+{
+  "name": "absys-language",
+  "displayName": "Absys (Aberdeen, 1967)",
+  "description": "Syntax highlighting, a language server and a run button for Absys, the assertional language of Foster and Elcock (University of Aberdeen, 1967-68), reconstructed: equations suspended until they can be solved, alternatives elaborated as parallel derivations, and texts accepted an assertion at a time.",
+  "version": "0.1.0",
+  "publisher": "chrishayuk",
+  "license": "Apache-2.0",
+  "private": true,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/chrishayuk/absys"
+  },
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages",
+    "Linters"
+  ],
+  "keywords": [
+    "absys",
+    "logic programming",
+    "history of computing",
+    "aberdeen",
+    "language server"
+  ],
+  "main": "./dist/extension.js",
+  "activationEvents": [],
+  "contributes": {
+    "languages": [
+      {
+        "id": "absys",
+        "aliases": ["Absys", "absys"],
+        "extensions": [".abs", ".ab1"],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "absys",
+        "scopeName": "source.absys",
+        "path": "./syntaxes/absys.tmLanguage.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "absys",
+        "path": "./snippets/absys.code-snippets"
+      }
+    ],
+    "commands": [
+      { "command": "absys.run", "title": "Run This Text", "category": "Absys", "icon": "$(play)" },
+      { "command": "absys.each", "title": "Run This Text, Showing the State After Each Assertion", "category": "Absys" },
+      { "command": "absys.trace", "title": "Run This Text, Showing Every Step", "category": "Absys" },
+      { "command": "absys.restartServer", "title": "Restart Language Server", "category": "Absys" }
+    ],
+    "menus": {
+      "editor/title/run": [
+        { "command": "absys.run", "when": "resourceLangId == absys" }
+      ],
+      "commandPalette": [
+        { "command": "absys.run", "when": "editorLangId == absys" },
+        { "command": "absys.each", "when": "editorLangId == absys" },
+        { "command": "absys.trace", "when": "editorLangId == absys" },
+        { "command": "absys.restartServer", "when": "editorLangId == absys" }
+      ]
+    },
+    "keybindings": [
+      { "command": "absys.run", "key": "ctrl+enter", "mac": "cmd+enter", "when": "editorTextFocus && editorLangId == absys" }
+    ],
+    "taskDefinitions": [
+      { "type": "absys" }
+    ],
+    "configuration": {
+      "title": "Absys",
+      "properties": {
+        "absys.path": {
+          "type": "string",
+          "default": "",
+          "description": "Path to an absys program to use as the language server (absys lsp) and to run texts with. Leave empty to use the one built into the extension."
+        },
+        "absys.search": {
+          "type": "string",
+          "enum": ["fair", "depth-first"],
+          "default": "fair",
+          "description": "The search the run commands use: fair, as Absys; or depth-first, for comparison."
+        },
+        "absys.trace.server": {
+          "type": "string",
+          "enum": ["off", "messages", "verbose"],
+          "default": "off",
+          "description": "Log the messages exchanged with the language server."
+        }
+      }
+    },
+    "configurationDefaults": {
+      "[absys]": {
+        "editor.semanticHighlighting.enabled": true,
+        "editor.wordBasedSuggestions": "off"
+      }
+    }
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "test:vscode": "node test/vscode/run.mjs",
+    "package": "node build.mjs && vsce package --no-dependencies"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
+  },
+  "devDependencies": {
+    "@vscode/test-electron": "^2.4.1",
+    "@vscode/vsce": "^3.2.1",
+    "esbuild": "^0.24.0",
+    "vscode-oniguruma": "^2.0.1",
+    "vscode-textmate": "^9.1.0"
+  }
+}

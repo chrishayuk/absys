@@ -1,0 +1,9 @@
+% ABSYS-E04: a left-recursive definition of a list of a's, asked to check a
+% list that is already known. In Prolog, as(L) :- as(M), L = [a|M] calls
+% as(M) with M unknown first, and descends for ever. In Absys the equation
+% L = ['a'|M] is elaborated as soon as it arises, so M is known before
+% as(M) is applied.
+as = lambda L
+    {as(M), L = ['a'|M]} or {L = []}
+L = ['a', 'a']
+as(L)

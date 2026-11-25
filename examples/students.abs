@@ -1,0 +1,19 @@
+% Elcock 1990, p. 15: the completion of Clark's student "microdatabase",
+% rendered in Absys. Transcribed as printed, with two misprints corrected:
+% the second alternative of takes has C - 'C101' for C = 'C101', and the
+% body of non-maths-major applies maths-course where math-course is defined.
+% (sources/notes/elcock-1990.md)
+student = lambda X
+    {X = 'BROWN'} or {X = 'SMITH'}
+math-course = lambda C
+    {C = 'C101'} or {C = 'C301'}
+takes = lambda X, C
+    {X = 'BROWN', C = 'C101'} or
+    {X = 'SMITH', C = 'C101'} or
+    {X = 'SMITH', C = 'C301'}
+non-maths-major = lambda X
+    {math-course(C), not(takes(X, C))}
+
+% Brown takes C101 but not C301, so Brown is a non-maths-major in Clark's
+% sense; Smith takes both, and is not.
+non-maths-major('BROWN')

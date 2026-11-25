@@ -1,0 +1,11 @@
+% ABSYS-E01: one procedure, several directions. Each goal below is a
+% separate question; run one at a time with absys repl, or see e01 in
+% docs/research.md for the table.
+app = lambda R, S, T
+    {R = [], S = T} or
+    {R = [X|L], T = [X|N], app(L, S, N)}
+rev1 = lambda R, S, T
+    {R = [], S = T} or
+    {R = [X|L], rev1(L, [X|S], T)}
+rev = lambda R, S
+    {rev1(R, [], S)}

@@ -1,0 +1,4 @@
+% ABSYS-E02: the same two assertions, in either order. not is not safe
+% (Elcock 1990, note 18): it is decided on the bindings as they stand.
+not(X = 1)
+X = 2

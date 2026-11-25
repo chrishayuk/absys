@@ -1,0 +1,3 @@
+% Foster and Elcock 1969 (MI4): "the trivial program x=y y = 2 would make
+% both x and y the datum 2."
+x=y   y = 2

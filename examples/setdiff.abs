@@ -1,0 +1,9 @@
+% Elcock 1990, p. 15: "a nice example taken from a demonstration of Absys-4
+% circa 1968, using the Absys primitive aggregation operator set".
+% mem is not given in the paper; this definition is ours.
+mem = lambda X, S
+    {S = [X|T]} or {S = [Y|T], mem(X, T)}
+setdiff = lambda S1, S2, S
+    {set(X), {mem(X, S1), not(mem(X, S2))}, S}
+
+setdiff([1,2,3,4], [2,4,6], D)

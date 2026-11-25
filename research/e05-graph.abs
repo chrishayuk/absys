@@ -1,0 +1,8 @@
+% ABSYS-E05: the reverse example of Elcock 1990, pp. 11-12, drawn:
+%   absys graph research/e05-graph.abs | dot -Tsvg > e05.svg
+rev1 = lambda R, S, T
+    {R = [], S = T} or
+    {R = [X|L], rev1(L, [X|S], T)}
+rev = lambda R, S
+    {rev1(R, [], S)}
+rev([1,2,U], [V|L])

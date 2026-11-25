@@ -1,0 +1,80 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Absys",
+  "scopeName": "source.absys",
+  "comment": "Both notations: Elcock 1990 (.abs) and Foster and Elcock 1969 (.ab1). A % starts a note to the end of the line.",
+  "patterns": [
+    { "include": "#comment" },
+    { "include": "#definition" },
+    { "include": "#strings" },
+    { "include": "#keywords" },
+    { "include": "#primitives" },
+    { "include": "#calls" },
+    { "include": "#identifiers" },
+    { "include": "#numbers" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "comment": {
+      "match": "%.*$",
+      "name": "comment.line.percentage.absys"
+    },
+    "definition": {
+      "comment": "app = lambda …, map'=lambda …",
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*(?:-[A-Za-z][A-Za-z0-9_]*)*)(')?\\s*(=)\\s*(lambda)\\b",
+      "captures": {
+        "1": { "name": "entity.name.function.definition.absys" },
+        "2": { "name": "storage.modifier.prime.absys" },
+        "3": { "name": "keyword.operator.equals.absys" },
+        "4": { "name": "keyword.control.lambda.absys" }
+      }
+    },
+    "strings": {
+      "patterns": [
+        { "match": "(?<![A-Za-z0-9_])'[^'\\n]*'", "name": "string.quoted.single.absys" },
+        { "match": "\"[^\"\\n]*\"", "name": "string.quoted.double.absys" }
+      ]
+    },
+    "keywords": {
+      "match": "\\b(lambda|or|not|begin|end|key)\\b",
+      "name": "keyword.control.absys"
+    },
+    "primitives": {
+      "match": "\\b(tout|set|null)(?=\\s*\\()",
+      "name": "support.function.builtin.absys"
+    },
+    "calls": {
+      "match": "\\b([A-Za-z_][A-Za-z0-9_]*(?:-[A-Za-z][A-Za-z0-9_]*)*)(?=\\()",
+      "name": "entity.name.function.call.absys"
+    },
+    "identifiers": {
+      "patterns": [
+        {
+          "match": "\\b([A-Z_][A-Za-z0-9_]*)\\b",
+          "name": "variable.other.absys"
+        },
+        {
+          "match": "\\b([a-z][A-Za-z0-9_]*(?:-[A-Za-z][A-Za-z0-9_]*)*)(')?",
+          "captures": {
+            "1": { "name": "variable.other.name.absys" },
+            "2": { "name": "storage.modifier.prime.absys" }
+          }
+        }
+      ]
+    },
+    "numbers": {
+      "match": "\\b\\d+\\b",
+      "name": "constant.numeric.integer.absys"
+    },
+    "operators": {
+      "patterns": [
+        { "match": "=>", "name": "keyword.operator.result.absys" },
+        { "match": "=", "name": "keyword.operator.equals.absys" },
+        { "match": "[|&]", "name": "keyword.operator.list.absys" },
+        { "match": "[+\\-*/]", "name": "keyword.operator.arithmetic.absys" },
+        { "match": "[;,]", "name": "punctuation.separator.absys" },
+        { "match": "[{}\\[\\]()]", "name": "punctuation.bracket.absys" }
+      ]
+    }
+  }
+}

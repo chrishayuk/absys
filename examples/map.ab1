@@ -1,0 +1,8 @@
+% Foster and Elcock 1969 (MI4): map, with the key that makes it terminate.
+% "map(p,f), where p is a list and f a function, should have the effect of
+% asserting f applied to each item of the list." The function small is ours.
+map'=lambda p, f key p
+    begin {null(p) or p = [r'&s'] f(r) map(s,f)} end
+small'=lambda x begin {x = 1 or x = 2} end
+
+map([a;b], small)
