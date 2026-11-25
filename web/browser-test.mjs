@@ -111,6 +111,7 @@ try {
     await m.mountRunner(div, { text: "x=y   y = 2", notation: "1969" }).run();
   })()`);
   check(/x = 2/.test(await js(`document.querySelector("#cell2 .ab-cell-out").textContent`)), "a cell runs a 1969 text");
+  check((await js(`document.querySelector("#cell2 .ab-editor").getBoundingClientRect().height`)) < 120, "a one-line cell is one line high");
 
   await open("reverse");
   await step(2);

@@ -88,13 +88,13 @@
 
 /* One cell of a notebook: a text, a button, and what absys prints. */
 .ab.ab-cell { margin: 20px 0; border: 1px solid var(--ab-rule); border-radius: 8px; background: var(--ab-card); overflow: hidden; }
-.ab .ab-cell-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--ab-rule); }
-.ab .ab-cell-label { font: 11px var(--ab-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ab-mute); flex: 1; min-width: 12em; }
-.ab .ab-cell-args { font: 12px var(--ab-mono); color: var(--ab-mute); }
-.ab .ab-cell .ab-editor { height: auto; min-height: 0; border: 0; border-radius: 0; }
-.ab .ab-cell .ab-text, .ab .ab-cell .ab-paint { position: relative; inset: auto; overflow: hidden; white-space: pre-wrap; word-break: break-word; }
-.ab .ab-cell .ab-text { position: absolute; inset: 0; }
-.ab .ab-cell-out { margin: 0; padding: 10px 14px; font: 12.5px/1.55 var(--ab-mono); white-space: pre; overflow-x: auto; border-top: 1px solid var(--ab-rule);
+.ab.ab-cell .ab-cell-head { display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; padding: 8px 12px; border-bottom: 1px solid var(--ab-rule); }
+.ab.ab-cell .ab-cell-label { font: 11px var(--ab-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--ab-mute); flex: 1; min-width: 12em; }
+.ab.ab-cell .ab-cell-args { font: 12px var(--ab-mono); color: var(--ab-mute); }
+.ab.ab-cell .ab-editor { height: auto; min-height: 0; border: 0; border-radius: 0; }
+.ab.ab-cell .ab-text, .ab.ab-cell .ab-paint { position: relative; inset: auto; overflow: hidden; white-space: pre-wrap; word-break: break-word; }
+.ab.ab-cell .ab-text { position: absolute; inset: 0; }
+.ab.ab-cell .ab-cell-out { margin: 0; padding: 10px 14px; font: 12.5px/1.55 var(--ab-mono); white-space: pre; overflow-x: auto; border-top: 1px solid var(--ab-rule);
   background: color-mix(in srgb, var(--ab-paper) 60%, var(--ab-card)); color: var(--ab-ink); max-height: 32em; overflow-y: auto; }
-.ab .ab-cell-out[hidden] { display: none; }
-.ab .ab-cell-note { margin: 0; padding: 8px 14px 10px; font-size: 14px; color: var(--ab-mute); border-top: 1px solid var(--ab-rule); }
+.ab.ab-cell .ab-cell-out[hidden] { display: none; }
+.ab.ab-cell .ab-cell-note { margin: 0; padding: 8px 14px 10px; font-size: 14px; color: var(--ab-mute); border-top: 1px solid var(--ab-rule); }
