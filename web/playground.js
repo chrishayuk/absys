@@ -85,8 +85,9 @@ function tree(run, upto) {
   return { kids, status, why, alive };
 }
 
-function mountWith(host, { examples, initial }) {
+function mountWith(host, { examples, initial, theme }) {
   host.classList.add("ab");
+  if (theme === "light") host.classList.add("ab-light");
   const state = { run: null, step: 0, notation: "1990", busy: false, showEnv: false, hideQuiet: true };
 
   // ---- the left: text and options ----
@@ -380,7 +381,7 @@ function mountWith(host, { examples, initial }) {
     destroy: () => {
       document.removeEventListener("keydown", keys);
       host.replaceChildren();
-      host.classList.remove("ab");
+      host.classList.remove("ab", "ab-light");
     },
   };
 }
@@ -388,14 +389,15 @@ function mountWith(host, { examples, initial }) {
 /**
  * The playground: a text, and the computation after each of its assertions.
  * `examples` is the list of texts (examples.json); if it is not given it is
- * fetched from beside this module. `initial` names the one to open.
+ * fetched from beside this module. `initial` names the one to open. `theme`
+ * "auto" follows the reader's light or dark setting; "light" keeps it light.
  */
-export function mountPlayground(host, { examples = null, initial = null } = {}) {
-  if (examples) return mountWith(host, { examples, initial });
+export function mountPlayground(host, { examples = null, initial = null, theme = "auto" } = {}) {
+  if (examples) return mountWith(host, { examples, initial, theme });
   let mounted = null;
   let gone = false;
   loadExamples().then((list) => {
-    if (!gone) mounted = mountWith(host, { examples: list, initial });
+    if (!gone) mounted = mountWith(host, { examples: list, initial, theme });
   });
   return { destroy: () => ((gone = true), mounted?.destroy()) };
 }
@@ -412,12 +414,12 @@ export function loadExamples() {
  * prints. The text can be edited before it is run.
  *
  * @param {HTMLElement} host
- * @param {{example?: string, text?: string, notation?: "1990"|"1969", args?: string[], label?: string, note?: string}} options
+ * @param {{example?: string, text?: string, notation?: "1990"|"1969", args?: string[], label?: string, note?: string, theme?: "auto"|"light"}} options
  *        example names a text of examples.json; otherwise `text` and
  *        `notation` give it. args go before the text: ["--each"],
  *        ["--trace"], ["permute"], ["--search", "depth-first"] …
  */
-export function mountRunner(host, { example = null, text = "", notation = "1990", args = [], label = "", note = "" } = {}) {
+export function mountRunner(host, { example = null, text = "", notation = "1990", args = [], label = "", note = "", theme = "auto" } = {}) {
   const area = $("textarea", { class: "ab-text", spellcheck: "false", autocapitalize: "off", "aria-label": label || "Absys text" });
   const paint = $("pre", { class: "ab-paint", "aria-hidden": "true" });
   const out = $("pre", { class: "ab-cell-out", hidden: true, "aria-live": "polite" });
@@ -425,7 +427,7 @@ export function mountRunner(host, { example = null, text = "", notation = "1990"
   const shown = ["absys", ...args, "FILE"].join(" ");
   const root = $(
     "div",
-    { class: "ab ab-cell" },
+    { class: theme === "light" ? "ab ab-light ab-cell" : "ab ab-cell" },
     $("div", { class: "ab-cell-head" }, $("span", { class: "ab-cell-label" }, label), $("code", { class: "ab-cell-args" }, shown), run),
     $("div", { class: "ab-editor" }, paint, area),
     out,

@@ -1,5 +1,6 @@
 /* The playground's look, scoped to .ab so that it can sit inside another
-   page (chrishayuk.com copies this file). Its colours are its own tokens. */
+   page (chrishayuk.com copies this file). Its colours are its own tokens,
+   light or dark with the reader's setting; .ab-light keeps them light. */
 .ab {
   --ab-paper: #f2efe8; --ab-ink: #1c1a17; --ab-mute: #7d7465; --ab-rule: #d9d2c3; --ab-accent: #a8822e; --ab-card: #faf8f3;
   --ab-good: #2f7a3d; --ab-bad: #a33a2f; --ab-wait: #b07a12; --ab-mono: "JetBrains Mono", "SF Mono", Menlo, Consolas, monospace;
@@ -7,10 +8,10 @@
   color: var(--ab-ink);
 }
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .ab { --ab-paper: #14120f; --ab-ink: #eee6d6; --ab-mute: #9c917e; --ab-rule: #3a352c; --ab-accent: #d1a64a; --ab-card: #1d1a16;
+  :root:not([data-theme="light"]) .ab:not(.ab-light) { --ab-paper: #14120f; --ab-ink: #eee6d6; --ab-mute: #9c917e; --ab-rule: #3a352c; --ab-accent: #d1a64a; --ab-card: #1d1a16;
     --ab-good: #79c48a; --ab-bad: #e0877b; --ab-wait: #e0b34f; --ab-string: #9ccc6b; --ab-macro: #c79be6; --ab-function: #7fb4ea; --ab-number: #ec9a76; }
 }
-:root[data-theme="dark"] .ab { --ab-paper: #14120f; --ab-ink: #eee6d6; --ab-mute: #9c917e; --ab-rule: #3a352c; --ab-accent: #d1a64a; --ab-card: #1d1a16;
+:root[data-theme="dark"] .ab:not(.ab-light) { --ab-paper: #14120f; --ab-ink: #eee6d6; --ab-mute: #9c917e; --ab-rule: #3a352c; --ab-accent: #d1a64a; --ab-card: #1d1a16;
   --ab-good: #79c48a; --ab-bad: #e0877b; --ab-wait: #e0b34f; --ab-string: #9ccc6b; --ab-macro: #c79be6; --ab-function: #7fb4ea; --ab-number: #ec9a76; }
 .ab, .ab * { box-sizing: border-box; }
 .ab code { font: 13px var(--ab-mono); }
