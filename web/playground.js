@@ -85,7 +85,7 @@ function tree(run, upto) {
   return { kids, status, why, alive };
 }
 
-export function mountPlayground(host, { examples, initial } = {}) {
+function mountWith(host, { examples, initial }) {
   host.classList.add("ab");
   const state = { run: null, step: 0, notation: "1990", busy: false, showEnv: false, hideQuiet: true };
 
@@ -353,11 +353,13 @@ export function mountPlayground(host, { examples, initial } = {}) {
   }
 
   // keyboard: ← and → step through the assertions, when not typing
-  document.addEventListener("keydown", (e) => {
+  const keys = (e) => {
+    if (!host.contains(document.activeElement) && document.activeElement !== document.body) return;
     if (document.activeElement === area || e.target.tagName === "SELECT") return;
     if (e.key === "ArrowLeft") show(state.step - 1);
     if (e.key === "ArrowRight") show(state.step + 1);
-  });
+  };
+  document.addEventListener("keydown", keys);
 
   const load = (i) => {
     const ex = examples[i];
@@ -374,4 +376,97 @@ export function mountPlayground(host, { examples, initial } = {}) {
   for (const s of [notation, search, select, negation, budget]) s.addEventListener("change", run);
   const start = Math.max(0, examples.findIndex((e) => e.name === initial));
   load(start);
+  return {
+    destroy: () => {
+      document.removeEventListener("keydown", keys);
+      host.replaceChildren();
+      host.classList.remove("ab");
+    },
+  };
+}
+
+/**
+ * The playground: a text, and the computation after each of its assertions.
+ * `examples` is the list of texts (examples.json); if it is not given it is
+ * fetched from beside this module. `initial` names the one to open.
+ */
+export function mountPlayground(host, { examples = null, initial = null } = {}) {
+  if (examples) return mountWith(host, { examples, initial });
+  let mounted = null;
+  let gone = false;
+  loadExamples().then((list) => {
+    if (!gone) mounted = mountWith(host, { examples: list, initial });
+  });
+  return { destroy: () => ((gone = true), mounted?.destroy()) };
+}
+
+let library = null;
+/** The examples and research texts, from examples.json beside this module. */
+export function loadExamples() {
+  library ??= fetch(new URL("examples.json", import.meta.url)).then((r) => r.json());
+  return library;
+}
+
+/**
+ * One cell of a notebook: a text, a button that runs it, and what absys
+ * prints. The text can be edited before it is run.
+ *
+ * @param {HTMLElement} host
+ * @param {{example?: string, text?: string, notation?: "1990"|"1969", args?: string[], label?: string, note?: string}} options
+ *        example names a text of examples.json; otherwise `text` and
+ *        `notation` give it. args go before the text: ["--each"],
+ *        ["--trace"], ["permute"], ["--search", "depth-first"] …
+ */
+export function mountRunner(host, { example = null, text = "", notation = "1990", args = [], label = "", note = "" } = {}) {
+  const area = $("textarea", { class: "ab-text", spellcheck: "false", autocapitalize: "off", "aria-label": label || "Absys text" });
+  const paint = $("pre", { class: "ab-paint", "aria-hidden": "true" });
+  const out = $("pre", { class: "ab-cell-out", hidden: true, "aria-live": "polite" });
+  const run = $("button", { class: "ab-run" }, "Run");
+  const shown = ["absys", ...args, "FILE"].join(" ");
+  const root = $(
+    "div",
+    { class: "ab ab-cell" },
+    $("div", { class: "ab-cell-head" }, $("span", { class: "ab-cell-label" }, label), $("code", { class: "ab-cell-args" }, shown), run),
+    $("div", { class: "ab-editor" }, paint, area),
+    out,
+    note ? $("p", { class: "ab-cell-note" }, note) : null,
+  );
+  host.replaceChildren(root);
+  const repaint = () => {
+    const t = area.value;
+    let html = "";
+    let at = 0;
+    for (const [from, to, kind] of tokens(t, notation)) {
+      html += esc(t.slice(at, from)) + `<span class="t-${kind}">${esc(t.slice(from, to))}</span>`;
+      at = to;
+    }
+    paint.innerHTML = html + esc(t.slice(at)) + "\n";
+  };
+  area.addEventListener("input", repaint);
+  area.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      go();
+    }
+  });
+  const ready = (example ? loadExamples().then((all) => all.find((x) => x.name === example)) : Promise.resolve(null)).then((ex) => {
+    if (ex) {
+      text = ex.text;
+      notation = ex.notation;
+    }
+    area.value = text.replace(/\n$/, "");
+    repaint();
+  });
+  async function go() {
+    await ready;
+    run.disabled = true;
+    run.textContent = "Running…";
+    const r = await runner({ args: [...args, "--notation", notation, "-"], text: area.value + "\n" });
+    run.disabled = false;
+    run.textContent = "Run again";
+    out.hidden = false;
+    out.textContent = r.error ? `absys could not run: ${r.error}` : (r.out + r.err).replace(/\n$/, "") || "(nothing printed)";
+  }
+  run.addEventListener("click", go);
+  return { run: go, destroy: () => host.replaceChildren() };
 }

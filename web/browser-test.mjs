@@ -91,6 +91,27 @@ try {
   await js(toEnd);
   check((await cards()).join(" ").includes("[1]") && !(await cards()).join(" ").includes("[1,3]"), "setdiff, fifo: D = [1]");
 
+  // a notebook cell: one text, a button, and what absys prints
+  await js(`(async () => {
+    const m = await import("./playground.js");
+    const div = document.createElement("div");
+    div.id = "cell";
+    document.body.append(div);
+    window.cell = m.mountRunner(div, { example: "reverse", args: ["--each"], label: "the reverse example" });
+    await window.cell.run();
+  })()`);
+  const printed = await js(`document.querySelector("#cell .ab-cell-out").textContent`);
+  check(/U = X₃/.test(printed) && /U = 5/.test(printed), "a cell runs the reverse example with --each");
+  check((await js(`getComputedStyle(document.querySelector("#cell .ab-cell")).borderStyle`)) === "solid", "the cell is styled from playground.css");
+  await js(`(async () => {
+    const m = await import("./playground.js");
+    const div = document.createElement("div");
+    div.id = "cell2";
+    document.body.append(div);
+    await m.mountRunner(div, { text: "x=y   y = 2", notation: "1969" }).run();
+  })()`);
+  check(/x = 2/.test(await js(`document.querySelector("#cell2 .ab-cell-out").textContent`)), "a cell runs a 1969 text");
+
   await open("reverse");
   await step(2);
   if (process.argv[2]) {
