@@ -1335,6 +1335,115 @@ fn same(a: &V, b: &V) -> bool {
     }
 }
 
+/// What a computation holds at one moment, for measurement only. Reading it
+/// changes nothing: no step, identifier, event or binding.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct Measure {
+    /// live derivations of the top-level computation
+    pub derivations: usize,
+    /// derivations inside `not` and `set` computations
+    pub sub_derivations: usize,
+    /// variables created, in every derivation
+    pub variables: usize,
+    /// variables with a value
+    pub bindings: usize,
+    /// suspended equations between two uninstantiated variables
+    pub susp_equations: usize,
+    /// applications waiting for a definition or for their key
+    pub susp_applications: usize,
+    /// arithmetic and `tout` relations waiting for values
+    pub susp_relations: usize,
+    /// `not` and `set` waiting to be decided or tried again
+    pub susp_negations: usize,
+    /// equations, literals and alternatives queued but not yet taken up
+    pub pending: usize,
+    /// nodes of the values bound to variables, counted in every derivation
+    /// that holds them, without regard to sharing
+    pub term_nodes: usize,
+}
+
+impl Measure {
+    pub const FIELDS: [&'static str; 10] = [
+        "derivations",
+        "sub_derivations",
+        "variables",
+        "bindings",
+        "susp_equations",
+        "susp_applications",
+        "susp_relations",
+        "susp_negations",
+        "pending",
+        "term_nodes",
+    ];
+
+    pub fn values(&self) -> [usize; 10] {
+        [
+            self.derivations,
+            self.sub_derivations,
+            self.variables,
+            self.bindings,
+            self.susp_equations,
+            self.susp_applications,
+            self.susp_relations,
+            self.susp_negations,
+            self.pending,
+            self.term_nodes,
+        ]
+    }
+
+    /// The larger of each field: a vector of peaks, not the peak of a sum.
+    pub fn max(&self, o: &Measure) -> Measure {
+        let (a, b) = (self.values(), o.values());
+        let m: Vec<usize> = a.iter().zip(b.iter()).map(|(x, y)| *x.max(y)).collect();
+        Measure {
+            derivations: m[0],
+            sub_derivations: m[1],
+            variables: m[2],
+            bindings: m[3],
+            susp_equations: m[4],
+            susp_applications: m[5],
+            susp_relations: m[6],
+            susp_negations: m[7],
+            pending: m[8],
+            term_nodes: m[9],
+        }
+    }
+}
+
+fn nodes(v: &V) -> usize {
+    match v {
+        V::Cons(p) => 1 + nodes(&p.0) + nodes(&p.1),
+        _ => 1,
+    }
+}
+
+impl Deriv {
+    fn measure_into(&self, m: &mut Measure) {
+        m.variables += self.cells.len();
+        for c in &self.cells {
+            if let Some(v) = &c.val {
+                m.bindings += 1;
+                m.term_nodes += nodes(v);
+            }
+        }
+        for s in self.susps.iter().filter(|s| !s.done) {
+            match s.why {
+                Why::Equation => m.susp_equations += 1,
+                Why::Undefined | Why::Key => m.susp_applications += 1,
+                Why::Arith | Why::Tout => m.susp_relations += 1,
+                Why::Negation | Why::Undecided => m.susp_negations += 1,
+            }
+        }
+        m.pending += self.eqs.len() + self.lits.len() + self.ors.len();
+        for sub in &self.subs {
+            m.sub_derivations += sub.comp.derivs.len();
+            for d in &sub.comp.derivs {
+                d.measure_into(m);
+            }
+        }
+    }
+}
+
 /// A set of derivations, elaborated in turn.
 #[derive(Clone, Debug)]
 pub struct Comp {
@@ -1345,6 +1454,18 @@ pub struct Comp {
 impl Comp {
     pub fn new(derivs: Vec<Deriv>) -> Comp {
         Comp { derivs, turn: 0 }
+    }
+
+    /// What the computation holds now (measurement only).
+    pub fn measure(&self) -> Measure {
+        let mut m = Measure {
+            derivations: self.derivs.len(),
+            ..Measure::default()
+        };
+        for d in &self.derivs {
+            d.measure_into(&mut m);
+        }
+        m
     }
 
     pub fn running(&self) -> usize {

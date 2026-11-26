@@ -9,7 +9,7 @@
 //! too).
 
 use crate::compile;
-use crate::machine::{Comp, Ctx, Deriv, Event, Notation, Opts, Susp, Why, V};
+use crate::machine::{Comp, Ctx, Deriv, Event, Measure, Notation, Opts, Susp, Why, V};
 use crate::syntax::{self, Error, Item, Span};
 use crate::syntax1969;
 use std::rc::Rc;
@@ -29,6 +29,9 @@ pub struct Report {
     pub exhausted: bool,
     pub alive: usize,
     pub failed: usize,
+    /// with `Session::measuring`: what the computation held at the end of
+    /// the assertion, and the peak of each quantity while it was elaborated
+    pub measure: Option<(Measure, Measure)>,
 }
 
 pub struct Session {
@@ -38,6 +41,9 @@ pub struct Session {
     pub reports: Vec<Report>,
     /// every derivation has failed: the text is unsatisfiable
     pub dead: bool,
+    /// sample `Comp::measure` after every step (measurement only)
+    pub measuring: bool,
+    peak: Measure,
 }
 
 impl Session {
@@ -48,6 +54,8 @@ impl Session {
             budget: DEFAULT_BUDGET,
             reports: vec![],
             dead: false,
+            measuring: false,
+            peak: Measure::default(),
         }
     }
 
@@ -67,6 +75,9 @@ impl Session {
             if !self.comp.step(&mut self.cx) {
                 break;
             }
+            if self.measuring {
+                self.peak = self.peak.max(&self.comp.measure());
+            }
         }
         if self.comp.derivs.is_empty() {
             self.dead = true;
@@ -82,7 +93,11 @@ impl Session {
         for d in &mut self.comp.derivs {
             d.assert(&p);
         }
+        if self.measuring {
+            self.peak = self.comp.measure();
+        }
         let (steps, exhausted) = self.run(self.budget);
+        let measure = self.measuring.then(|| (self.comp.measure(), self.peak));
         self.reports.push(Report {
             line: item.line,
             span: item.span,
@@ -92,6 +107,7 @@ impl Session {
             exhausted,
             alive: self.comp.derivs.len(),
             failed: self.cx.failed.len().saturating_sub(failed0),
+            measure,
         });
         Ok(self.reports.last().unwrap())
     }

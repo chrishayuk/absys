@@ -1,6 +1,6 @@
 //! What `absys FILE` prints.
 
-use crate::machine::{Deriv, Notation, Status};
+use crate::machine::{Deriv, Measure, Notation, Status};
 use crate::session::{answers, describe_wait, procedures, Session};
 
 #[derive(Clone, Copy, Default)]
@@ -130,4 +130,28 @@ pub fn run(s: &mut Session, text: &str, show: Show) -> Result<String, crate::syn
         state(s, show, &mut out);
     }
     Ok(out)
+}
+
+/// With `--measure`: one table row per assertion and quantity, as
+/// tab-separated `line  assertion  steps  quantity  now  peak`. The peak is
+/// the largest value seen after any step of that assertion: exact at the
+/// granularity of steps.
+pub fn measures(s: &Session) -> String {
+    let mut out = String::from("line\tassertion\tsteps\tquantity\tnow\tpeak\n");
+    for r in &s.reports {
+        let Some((now, peak)) = r.measure else { continue };
+        let src: String = r.source.split_whitespace().collect::<Vec<_>>().join(" ");
+        for (k, name) in Measure::FIELDS.iter().enumerate() {
+            out.push_str(&format!(
+                "{}\t{}\t{}\t{}\t{}\t{}\n",
+                r.line,
+                src,
+                r.steps,
+                name,
+                now.values()[k],
+                peak.values()[k]
+            ));
+        }
+    }
+    out
 }

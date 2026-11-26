@@ -23,6 +23,8 @@ options:
   --negation immediate|delayed    when not is elaborated (default immediate, as Absys)
   --steps N               the budget of steps for each assertion (default 100000)
   --wake front|back       where a returned relation goes in the goal (default front)
+  --measure               after each assertion, what the computation holds and the peak of each
+                          quantity while it ran, on standard error (measurement only)
   --notation 1990|1969|1982  (default from the file name: .ab1 is 1969, .ab2 1982, anything else 1990)";
 
 const DECISIONS: &str = include_str!("../docs/decisions.md");
@@ -32,6 +34,7 @@ struct Args {
     show: Show,
     budget: usize,
     notation: Option<Notation>,
+    measure: bool,
     rest: Vec<String>,
 }
 
@@ -47,6 +50,7 @@ fn args() -> Args {
         show: Show::default(),
         budget: DEFAULT_BUDGET,
         notation: None,
+        measure: false,
         rest: vec![],
     };
     let mut i = 0;
@@ -59,6 +63,7 @@ fn args() -> Args {
             "--trace" => a.show.trace = true,
             "--each" => a.show.each = true,
             "--env" => a.show.env = true,
+            "--measure" => a.measure = true,
             "--search" => {
                 a.opts.search = match value(&mut i).as_str() {
                     "fair" => Search::Fair,
@@ -172,9 +177,13 @@ fn main() {
             a.opts.notation = a.notation.unwrap_or_else(|| notation_for(f));
             let mut s = Session::new(a.opts);
             s.budget = a.budget;
+            s.measuring = a.measure;
             match run(&mut s, &text, a.show) {
                 Ok(out) => print!("{out}"),
                 Err(e) => report_error(f, &text, &e),
+            }
+            if a.measure {
+                eprint!("{}", absys::report::measures(&s));
             }
         }
         _ => fail(USAGE),
