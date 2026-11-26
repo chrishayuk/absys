@@ -1,0 +1,6 @@
+1 derivation:
+  derivation #0 (hibernating)
+    u = 2
+    v = 14
+    w = 7
+    environment u/2, v/14, w/7

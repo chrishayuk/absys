@@ -176,6 +176,7 @@ pub fn run_json(text: &str, opts: Opts, budget: usize) -> String {
             match n {
                 Notation::Retrospective => "1990",
                 Notation::Absys1 => "1969",
+                Notation::Elcock1982 => "1982",
             }
             .into(),
         ),

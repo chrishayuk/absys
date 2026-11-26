@@ -10,7 +10,7 @@ fn every_example_prints_its_out() {
     for e in fs::read_dir("examples").unwrap() {
         let path = e.unwrap().path();
         let name = path.to_string_lossy().to_string();
-        if !(name.ends_with(".abs") || name.ends_with(".ab1")) {
+        if !(name.ends_with(".abs") || name.ends_with(".ab1") || name.ends_with(".ab2")) {
             continue;
         }
         let text = fs::read_to_string(&path).unwrap();
@@ -31,7 +31,7 @@ fn every_example_prints_its_out() {
         assert_eq!(got, want, "{name}");
         n += 1;
     }
-    assert!(n >= 9);
+    assert!(n >= 11);
 }
 
 #[test]

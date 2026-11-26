@@ -1,0 +1,11 @@
+% Elcock 1982, p. 122: list membership, with a key, in the notation of the
+% 1982 paper. "The assertion mem(x,[1,2,3]) is equivalent to asserting
+% << x=1 or x=2 or x=3 >>. If in addition we were now to assert
+% mem(x,[2,4,6]) ... then distribution would lead to nine computational
+% branches of which only one, that associated with x=2, would be
+% satisfiable and hence remain active."
+mem = lambda m,s key  s
+      << s = [p|sl] and
+         << m = p or mem(m,sl) >> >>
+mem(x,[1,2,3])
+mem(x,[2,4,6])

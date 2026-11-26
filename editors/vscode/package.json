@@ -31,7 +31,7 @@
       {
         "id": "absys",
         "aliases": ["Absys", "absys"],
-        "extensions": [".abs", ".ab1"],
+        "extensions": [".abs", ".ab1", ".ab2"],
         "configuration": "./language-configuration.json"
       }
     ],

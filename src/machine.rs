@@ -55,6 +55,9 @@ pub enum Goal {
     Tout(V, V),
     /// a part of a body, with the values of its variables
     Do(Rc<G>, Env),
+    /// a suspended process returned to the goal because a variable it was
+    /// associated with has been instantiated
+    Woken(usize),
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -127,6 +130,15 @@ pub enum Select {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Wake {
+    /// returned relations go to the head of the goal: Elcock 1982's printed
+    /// lists come out this way (sources/notes/elcock-1982.md); the default
+    Front,
+    /// returned relations are appended, as the word in Elcock 1982 says
+    Back,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum Negation {
     /// as Absys: at once, on the bindings as they stand (p. 15, note 18: not safe)
     Immediate,
@@ -140,12 +152,15 @@ pub enum Notation {
     Retrospective,
     /// Foster and Elcock 1969: [1;2;u], [x&l]
     Absys1,
+    /// Elcock 1982: mem = lambda m,s key s << s = [p|sl] and … >>
+    Elcock1982,
 }
 
 #[derive(Clone, Copy, Debug)]
 pub struct Opts {
     pub search: Search,
     pub select: Select,
+    pub wake: Wake,
     pub negation: Negation,
     pub notation: Notation,
 }
@@ -155,6 +170,7 @@ impl Default for Opts {
         Opts {
             search: Search::Fair,
             select: Select::InPlace,
+            wake: Wake::Front,
             negation: Negation::Immediate,
             notation: Notation::Retrospective,
         }
@@ -231,6 +247,9 @@ pub struct Deriv {
     local_no: u32,
     sub_turn: bool,
     pub status: Status,
+    /// the returned primitive relation being elaborated, if any, so that if
+    /// it must wait again it keeps its associations rather than gaining new ones
+    current: Option<usize>,
 }
 
 /// Lists longer than this are shown cut short, with `…`.
@@ -261,6 +280,7 @@ impl Deriv {
             local_no: 0,
             sub_turn: false,
             status: Status::Running,
+            current: None,
         }
     }
 
@@ -395,9 +415,18 @@ impl Deriv {
     /// Adds a process to the goal. Equations are elaborated as they arise,
     /// before any application; an `or` distributes at the next step.
     pub fn add(&mut self, g: Goal) {
+        if let Goal::Woken(id) = g {
+            match &self.susps[id].goal {
+                Goal::Eq(..) | Goal::Arith(..) => self.eqs.push_back(g),
+                Goal::Do(node, _) if matches!(&**node, G::Eq(..) | G::Arith(..)) => self.eqs.push_back(g),
+                _ => self.lits.push_back(g),
+            }
+            return;
+        }
         match g {
             Goal::Eq(..) | Goal::Arith(..) => self.eqs.push_back(g),
             Goal::Call(..) | Goal::Tout(..) => self.lits.push_back(g),
+            Goal::Woken(_) => unreachable!("handled above"),
             Goal::Do(ref node, ref env) => match &**node {
                 G::Eq(..) | G::Arith(..) => self.eqs.push_back(g),
                 G::And(v) => {
@@ -419,6 +448,23 @@ impl Deriv {
     }
 
     fn suspend(&mut self, goal: Goal, on: Vec<u32>, why: Why) {
+        // A returned relation that still cannot be elaborated: it is already
+        // associated with its variables (Elcock 1982 p. 123), so it is only
+        // associated with any it was not associated with before.
+        if why == Why::Arith {
+            if let Some(id) = self.current.take() {
+                for x in &on {
+                    if !self.cells[*x as usize].waiting.contains(&id) {
+                        self.cells[*x as usize].waiting.push(id);
+                    }
+                    if !self.susps[id].on.contains(x) {
+                        self.susps[id].on.push(*x);
+                    }
+                }
+                self.susps[id].goal = goal;
+                return;
+            }
+        }
         let id = self.susps.len();
         for x in &on {
             self.cells[*x as usize].waiting.push(id);
@@ -431,15 +477,36 @@ impl Deriv {
         });
     }
 
-    fn bind(&mut self, x: u32, t: V, woke: &mut Vec<usize>) {
+    /// Whether a suspended process is a primitive relation: an equation, or
+    /// arithmetic. These stay associated with each of their variables, and
+    /// return to the goal each time one of them is instantiated, even after
+    /// they have been elaborated (Elcock 1982 p. 123, where w*2 = 14 is on the
+    /// list twice). Anything else returns once.
+    fn primitive(&self, id: usize) -> bool {
+        matches!(self.susps[id].why, Why::Equation | Why::Arith)
+    }
+
+    fn bind(&mut self, x: u32, t: V, woke: &mut Vec<usize>, wake: Wake) {
         let cell = &mut self.cells[x as usize];
         cell.val = Some(t);
+        let mut back = vec![];
         for id in std::mem::take(&mut cell.waiting) {
-            if !self.susps[id].done {
+            if self.susps[id].done {
+                continue;
+            }
+            if !self.primitive(id) {
                 self.susps[id].done = true;
-                woke.push(id);
-                let g = self.susps[id].goal.clone();
-                self.add(g);
+            }
+            woke.push(id);
+            back.push(Goal::Woken(id));
+        }
+        match wake {
+            Wake::Back => back.into_iter().for_each(|g| self.add(g)),
+            Wake::Front => {
+                let (eqs, lits) = (std::mem::take(&mut self.eqs), std::mem::take(&mut self.lits));
+                back.into_iter().for_each(|g| self.add(g));
+                self.eqs.extend(eqs);
+                self.lits.extend(lits);
             }
         }
     }
@@ -489,6 +556,14 @@ impl Deriv {
             Goal::Arith(op, a, b, c) => self.arith(op, a, b, c, cx),
             Goal::Call(f, args) => self.call(f, args, cx),
             Goal::Tout(l, t) => self.tout(l, t, cx),
+            Goal::Woken(id) => {
+                let g = self.susps[id].goal.clone();
+                let arith = matches!(g, Goal::Arith(..));
+                self.current = arith.then_some(id);
+                let out = self.process(g, cx);
+                self.current = None;
+                out
+            }
             Goal::Do(node, env) => match &*node {
                 G::Eq(a, b) => {
                     let (a, b) = (self.inst(a, &env), self.inst(b, &env));
@@ -541,7 +616,7 @@ impl Deriv {
                 }
                 (V::Var(x), t) | (t, V::Var(x)) => {
                     bound.push(*x);
-                    self.bind(*x, t.clone(), &mut woke);
+                    self.bind(*x, t.clone(), &mut woke, cx.opts.wake);
                 }
                 (V::Cons(p), V::Cons(q)) => {
                     work.push((p.1.clone(), q.1.clone()));
@@ -631,6 +706,9 @@ impl Deriv {
                 let other = if x.is_some() { b } else { a };
                 if k == 0 {
                     if z == 0 {
+                        if let Some(id) = self.current.take() {
+                            self.susps[id].done = true;
+                        }
                         cx.ev(
                             self.id,
                             "equation",
@@ -1046,7 +1124,7 @@ impl Deriv {
             }
             V::Cons(_) => {
                 let (sep, bar) = match n {
-                    Notation::Retrospective => (",", "|"),
+                    Notation::Retrospective | Notation::Elcock1982 => (",", "|"),
                     Notation::Absys1 => (";", "&"),
                 };
                 out.push('[');
@@ -1106,6 +1184,7 @@ impl Deriv {
             }
             Goal::Tout(l, t) => format!("tout({}, {})", self.show(l, n), self.show(t, n)),
             Goal::Do(g, env) => self.show_g(g, env, n),
+            Goal::Woken(id) => self.show_goal(&self.susps[*id].goal, n),
         }
     }
 
@@ -1154,7 +1233,7 @@ impl Deriv {
             T::Lam(_) => "lambda …".into(),
             T::Cons(..) => {
                 let (sep, bar) = match n {
-                    Notation::Retrospective => (",", "|"),
+                    Notation::Retrospective | Notation::Elcock1982 => (",", "|"),
                     Notation::Absys1 => (";", "&"),
                 };
                 let mut parts = vec![];
@@ -1183,7 +1262,21 @@ impl Deriv {
 
     /// Processes waiting: suspended equations and the rest.
     pub fn waiting(&self) -> impl Iterator<Item = &Susp> {
-        self.susps.iter().filter(|s| !s.done)
+        self.susps
+            .iter()
+            .filter(|s| !s.done && s.on.iter().any(|v| matches!(self.deref(&V::Var(*v)), V::Var(_))))
+    }
+
+    /// The relations associated with an identifier of the text and still
+    /// waiting on it, as Elcock 1982 lists them: (u: u+v=16; w*u=v).
+    pub fn associations(&self, name: &str, n: Notation) -> Vec<String> {
+        let Some(v) = self.lookup(name) else { return vec![] };
+        self.cells[v as usize]
+            .waiting
+            .iter()
+            .filter(|id| !self.susps[**id].done)
+            .map(|id| self.show_goal(&self.susps[*id].goal, n))
+            .collect()
     }
 
     /// The binding environment, as the retrospective writes it: X₁/1, L₁/[2,U], …

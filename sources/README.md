@@ -17,6 +17,7 @@ where each one can be had. What was read from each, and how, is in
 | **E90** | E. W. Elcock, "Absys: the first logic programming language: a retrospective and a commentary", *J. Logic Programming* 9(1) (1990) 1-17. doi:10.1016/0743-1066(90)90030-9 | all of it, read from the scanned pages; [notes](notes/elcock-1990.md) | Elsevier open archive. CORE (https://core.ac.uk/download/pdf/82537271.pdf) refuses automated fetching; the copy used was downloaded by hand |
 | **FE69** | J. M. Foster and E. W. Elcock, "Absys 1: an incremental compiler for assertions; an introduction", in *Machine Intelligence 4* (Meltzer and Michie, eds.), Edinburgh U.P. (1969) 423-429 | OCR extracts of its sections "Introduction", "The 'AND' connective", "Data directed control", "Functions", "The 'OR' connective" and "Recursive functions and keys", as quoted on HOPL (exp=357; a Wayback copy, since hopl.info's certificate has lapsed); [notes](notes/foster-elcock-1969.md) | the whole volume is on archive.org (`machineintellige0004unse`), for lending only. **The last pages, roughly 428-429, have not been seen** |
 | **F68** | J. M. Foster, "Assertions: programs written without specifying unnecessary order", in *Machine Intelligence 3* (Michie, ed.), Edinburgh U.P. (1968) 387-391 | all of it, from the archive.org OCR | archive.org `mi3_20200519`, open |
+| **E82** | E. W. Elcock, "Goal selection strategies in Horn clause programming", *Proceedings of the 4th National Conference of the CSCSI/SCEIO*, 1982, pp. 121-124 | all of it, read from the page scans; [notes](notes/elcock-1982.md) | open, in the proceedings put online by CAIAC: https://www.caiac.ca/sites/default/files/shared/canai-archives/1982_CSCSI_Proceedings-opt.pdf (PDF pp. 129-132). Found after the first version of the reconstruction |
 
 Also consulted:
 
@@ -80,6 +81,7 @@ Not seen:
 The dates conflict:
 
 - E90 says Absys was "essentially completed in 1967".
+- E82 says "essentially completed in 1968".
 - F68, given at a workshop in 1967, says it is "partly implemented".
 - Reid (2011) has it developed "in 1968 and beyond".
 

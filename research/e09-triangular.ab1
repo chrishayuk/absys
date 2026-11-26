@@ -1,0 +1,6 @@
+% ABSYS-E09: the same kind of system, but triangular. Each equation, taken
+% when it can be, has one unknown left, so data-directed elaboration solves
+% it in whatever order the assertions are given.
+x + y + z = 12
+y + z = 7
+z = 3

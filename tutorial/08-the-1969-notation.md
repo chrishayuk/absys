@@ -126,3 +126,51 @@ r'=item(p1)   s'=item(p2)   t'=item(p3)   r+s=t
 ```
 
 These are the paper's three, in the paper's order.
+
+## The 1982 notation
+
+In 1982 Elcock wrote Absys a third way, for a short paper comparing it with
+Prolog. It is the 1969 notation with:
+
+- `<< … >>` for `{ … }`;
+- `and` written between assertions;
+- lists written `[a,b]` and `[h|t]`;
+- no primes. A name a lambda's body uses but never applies is local to it.
+
+Files ending `.ab2` are read in it. Its example walks through Absys's list
+of relations still to be elaborated, step by step. `--trace` shows the same
+steps:
+
+```absys 1982 --trace
+u+v = 16  and  w*u = v  and  u+10 = 12
+```
+
+```output
+» u+v = 16  and  w*u = v  and  u+10 = 12
+  #0    suspend   u + v = 16: waits for two of its numbers
+  #0    suspend   w * u = v: waits for two of its numbers
+  #0    equation  u + 10 = 12: gives 2
+  #0    equation  u = 2: u/2; reactivated 2 + v = 16, w * 2 = v
+  #0    equation  2 + v = 16: gives 14
+  #0    equation  v = 14: v/14; reactivated 2 + 14 = 16, w * 2 = 14
+  #0    equation  2 + 14 = 16: gives 16
+  #0    equation  16 = 16: holds
+  #0    equation  w * 2 = 14: gives 7
+  #0    equation  w = 7: w/7; reactivated 7 * 2 = 14
+  #0    equation  7 * 2 = 14: gives 14
+  #0    equation  14 = 14: holds
+  #0    equation  7 * 2 = 14: gives 14
+  #0    equation  14 = 14: holds
+  #0    hibernate nothing more can be done: the derivation hibernates
+1 derivation:
+  derivation #0 (hibernating)
+    u = 2
+    v = 14
+    w = 7
+```
+
+The two relations that cannot be elaborated are associated with their
+unknowns. When `u+10 = 12` binds u, both come back. When `2+v = 16` binds
+v, both come back again, so `w*2 = 14` is examined twice and `2+14 = 16` is
+checked after it has already run. That is what Elcock's lists show
+(`docs/research.md`, E06).

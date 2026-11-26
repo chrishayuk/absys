@@ -304,3 +304,113 @@ fn e90_p8_one_procedure_in_every_direction() {
         ]
     );
 }
+
+/// The list of relations awaiting elaboration after each step, without spaces.
+/// The list of relations after each step, the association lists of u, v and
+/// w after each step, and the session at the end.
+type Steps = (Vec<Vec<String>>, Vec<Vec<Vec<String>>>, Session);
+
+fn relation_lists(text: &str, wake: absys::machine::Wake) -> Steps {
+    let opts = Opts {
+        notation: Notation::Elcock1982,
+        wake,
+        ..Opts::default()
+    };
+    let mut s = Session::new(opts);
+    let items = absys::session::parse(opts.notation, text).unwrap();
+    assert_eq!(items.len(), 1, "the program is one conjunction");
+    let p = absys::compile::assertion(text, &items[0].assertion).unwrap();
+    s.comp.derivs[0].assert(&p);
+    let squash = |v: Vec<String>| v.into_iter().map(|x| x.replace(' ', "")).collect::<Vec<_>>();
+    let (mut lists, mut assoc) = (vec![], vec![]);
+    while s.comp.step(&mut s.cx) {
+        let d = &s.comp.derivs[0];
+        lists.push(squash(d.pending(opts.notation)));
+        assoc.push(
+            ["u", "v", "w"]
+                .map(|n| squash(d.associations(n, opts.notation)))
+                .to_vec(),
+        );
+    }
+    (lists, assoc, s)
+}
+
+const E82_PROGRAM: &str = "u+v = 16  and  w*u = v  and  u+10 = 12";
+
+/// E82 p. 123, ABSYS-E06: "We now have the association lists (u: u+v = 16;
+/// w*u = v) ; (v: u+v = 16; w*u = v) and (w: w*u = v) ... the list of
+/// relations (2+v = 16; w*2 = v) associated with u is appended ... This list
+/// is now (2+14 = 16; w*2 = 14; w*2 = 14) ... This list is now (7*2 = 14;
+/// 7*2 = 14)." Every state comes out as printed with returned relations put
+/// at the head of the list (the default).
+#[test]
+fn e82_p123_the_list_of_relations() {
+    let (lists, assoc, s) = relation_lists(E82_PROGRAM, absys::machine::Wake::Front);
+    let l = |v: &[&str]| v.iter().map(|x| x.to_string()).collect::<Vec<_>>();
+    // after u+v = 16 and w*u = v have been examined
+    assert_eq!(
+        assoc[1],
+        vec![l(&["u+v=16", "w*u=v"]), l(&["u+v=16", "w*u=v"]), l(&["w*u=v"])]
+    );
+    assert_eq!(lists[1], l(&["u+10=12"]));
+    // u+10 = 12 binds u to 2
+    assert_eq!(lists[2], l(&["2+v=16", "w*2=v"]));
+    // 2+v = 16 binds v to 14: both relations associated with v come back
+    assert_eq!(lists[3], l(&["2+14=16", "w*2=14", "w*2=14"]));
+    // "The first relation is examined, elaborated and found satisfied."
+    assert_eq!(lists[4], l(&["w*2=14", "w*2=14"]));
+    // "The second is examined ... w is bound to 7"
+    assert_eq!(lists[5], l(&["7*2=14", "7*2=14"]));
+    assert_eq!(lists[6], l(&["7*2=14"]));
+    assert_eq!(lists[7], Vec::<String>::new());
+    let d = &s.comp.derivs[0];
+    for (name, v) in [("u", "2"), ("v", "14"), ("w", "7")] {
+        assert_eq!(value(d, name, Notation::Elcock1982), v);
+    }
+}
+
+/// The same, with returned relations appended to the end, as the word
+/// "appended" says: the third list is (w*2 = 14; 2+14 = 16; w*2 = 14), so
+/// the first relation then examined binds w, and is not "found satisfied".
+/// The bindings at the end are the same.
+#[test]
+fn e82_p123_appended_literally() {
+    let (lists, _, s) = relation_lists(E82_PROGRAM, absys::machine::Wake::Back);
+    assert_eq!(lists[3], vec!["w*2=14", "2+14=16", "w*2=14"]);
+    let d = &s.comp.derivs[0];
+    for (name, v) in [("u", "2"), ("v", "14"), ("w", "7")] {
+        assert_eq!(value(d, name, Notation::Elcock1982), v);
+    }
+}
+
+/// E82 p. 122: "mem(x,[1,2,3]) is equivalent to asserting << x=1 or x=2 or
+/// x=3 >>. If in addition we were now to assert mem(x,[2,4,6]) ... only one,
+/// that associated with x=2, would be satisfiable and hence remain active."
+#[test]
+fn e82_p122_mem_with_a_key() {
+    let mut s = Session::new(Opts {
+        notation: Notation::Elcock1982,
+        ..Opts::default()
+    });
+    s.load("mem = lambda m,s key  s\n      << s = [p|sl] and\n         << m = p or mem(m,sl) >> >>\nmem(x,[1,2,3])")
+        .unwrap();
+    let xs: Vec<String> = s
+        .comp
+        .derivs
+        .iter()
+        .map(|d| value(d, "x", Notation::Elcock1982))
+        .collect();
+    assert_eq!(xs, vec!["1", "2", "3"]);
+    s.load("mem(x,[2,4,6])").unwrap();
+    assert_eq!(s.comp.derivs.len(), 1);
+    assert_eq!(value(&s.comp.derivs[0], "x", Notation::Elcock1982), "2");
+    // the key: mem applied to a list not yet known waits for it
+    let mut s = Session::new(Opts {
+        notation: Notation::Elcock1982,
+        ..Opts::default()
+    });
+    s.load("mem = lambda m,s key  s\n      << s = [p|sl] and\n         << m = p or mem(m,sl) >> >>\nmem(x,l)")
+        .unwrap();
+    assert_eq!(s.comp.derivs.len(), 1);
+    assert_eq!(s.comp.derivs[0].waiting().count(), 1);
+}

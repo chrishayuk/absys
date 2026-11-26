@@ -45,6 +45,8 @@ pp. 12-13), variable for variable.
 - **The sources.** No Absys program text, listing or manual from Aberdeen is
   known to us. The reconstruction rests on:
   - Elcock's 1990 retrospective, read in full from the page scans;
+  - Elcock's 1982 conference paper comparing Absys with Prolog, which walks
+    through Absys's list of relations step by step;
   - Foster's 1968 *Assertions* paper, read in full;
   - OCR extracts of most of the sections of Foster and Elcock's 1969
     introduction to Absys 1.
@@ -57,12 +59,14 @@ pp. 12-13), variable for variable.
   - a decision, where the sources are silent or conflict, with the reason;
   - an experiment, which is not historical.
 - **Every computation the sources give a result for comes out as they
-  say.** There are 14 acceptance tests, each naming its page
-  ([`tests/historical.rs`](tests/historical.rs)).
-- **Two notations run on the one machine:**
+  say.** There are 17 acceptance tests, each naming its page
+  ([`tests/historical.rs`](tests/historical.rs)). They include every list of
+  relations awaiting elaboration that Elcock printed in 1982.
+- **Three notations run on the one machine:**
   - the retrospective's (`.abs`), which Elcock says takes liberties with
     the original;
-  - the 1969 notation of Absys 1 (`.ab1`), as far as the extracts show it.
+  - the 1969 notation of Absys 1 (`.ab1`), as far as the extracts show it;
+  - the 1982 paper's (`.ab2`), with `<< … >>` and `and`.
 - **Not reconstructed.** The higher-order features and "simple control
   mechanisms" of Absys-4 are described only in a report not seen, so they
   are not reconstructed.
@@ -103,6 +107,16 @@ pp. 12-13), variable for variable.
     variables are instantiated also computes `[1,3]`, and Elcock mentions
     delays he does not describe. So the example favours the body in the
     literal's place without proving it (`docs/decisions.md`, rule 15).
+- **Elcock's 1982 walk-through fixes how relations come back.** A relation
+  goes back on the list once for each of its variables that is bound, even
+  after it has run, and goes to the head of the list. The paper says
+  "appended", but its printed lists come out only if they go to the head.
+  The same paper says the alternatives were implemented by "backtracking in
+  a similar spirit to Prolog"; the 1990 one says the search was fair
+  (`docs/research.md`, E06).
+- **Data-directed elaboration stops at the first system that needs
+  elimination**, as Elcock said in 1982: x + y = 10 and x - y = 4 leave both
+  relations waiting (E09).
 - **Fair search finds what depth-first search never reaches.**
   `{loop(A)} or {A = 1}` gives `A = 1` while the loop runs on. Left
   recursion over known data terminates under either search, because
@@ -116,7 +130,7 @@ pp. 12-13), variable for variable.
   [`sources/notes/elcock-1990.md`](sources/notes/elcock-1990.md).
 
 The experiments, with their numbers, are in
-[`docs/research.md`](docs/research.md) (ABSYS-E01 to E05).
+[`docs/research.md`](docs/research.md) (ABSYS-E01 to E06, and E09).
 
 ## Install and use
 

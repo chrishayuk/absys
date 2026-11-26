@@ -69,7 +69,7 @@ test("the 1969 notation: primes are not quotes", () => {
 });
 
 test("every example is coloured, and nothing is left unscoped", () => {
-  for (const f of readdirSync(examples).filter((n) => n.endsWith(".abs") || n.endsWith(".ab1"))) {
+  for (const f of readdirSync(examples).filter((n) => /\.ab[s12]$/.test(n))) {
     for (const [text, scope] of scopes(readFileSync(examples + f, "utf8"))) {
       assert.notEqual(scope, "source.absys", `${f}: ${text} has no scope`);
     }

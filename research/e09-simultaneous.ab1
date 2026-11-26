@@ -1,0 +1,7 @@
+% ABSYS-E09: where data-directed elaboration stops. Elcock 1982, p. 124:
+% "much more sophisticated aggregation and solution methods would be
+% necessary to deal with a conjunction of a general set of linear equations
+% in n variables". Two equations, two unknowns, each relation waiting for
+% two of its three numbers: nothing can be inferred, and both hibernate.
+x + y = 10
+x - y = 4

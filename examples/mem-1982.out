@@ -1,0 +1,5 @@
+1 derivation:
+  derivation #11 (hibernating)
+    procedures  mem
+    x = 2
+    environment x/2, p₁/1, sl₁/[2,3], p₂/2, sl₂/[3], p₃/2, sl₃/[4,6]

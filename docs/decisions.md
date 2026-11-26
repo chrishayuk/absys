@@ -19,8 +19,12 @@ The abbreviations are:
   extracts of most of its sections have been seen, not its last pages.
 - **F68**: Foster, "Assertions: programs written without specifying
   unnecessary order", *Machine Intelligence 3* (1968).
+- **E82**: Elcock, "Goal selection strategies in Horn clause programming",
+  *Proc. 4th CSCSI/SCEIO Conference* (1982) 121-124, read from the page
+  scans (`sources/notes/elcock-1982.md`). It was found after the first
+  version of this reconstruction, and the rules it changed say so.
 
-## Two notations, one machine
+## Three notations, one machine
 
 1. **The 1990 notation** (`.abs`) is the one E90 uses. E90 says it takes
    "some slight liberties ... with the original syntax" (p. 3), and calls
@@ -44,10 +48,15 @@ The abbreviations are:
      and a key.
    - `null(p)` and arithmetic `a = b + 1` are available.
 
-3. *Decision.* **Both notations read into the same tree and run on the same
-   machine.** E90 presents its Absys as the language of FE69 with a
-   different surface. Nothing in either source suggests that the two
-   evaluate differently.
+   The 1982 notation (`.ab2`) is the one E82 uses for its examples: the
+   1969 notation, with `<< … >>` for `{ … }`, `and` written between
+   assertions, lists written `[a,b]` and `[h|t]`, and no primes. The source
+   is E82 pp. 122-123.
+
+3. *Decision.* **All three notations read into the same tree and run on the
+   same machine.** E90 presents its Absys as the language of FE69 with a
+   different surface, and E82 draws "heavily on Foster and Elcock (1969)".
+   Nothing in the sources suggests that they evaluate differently.
 
 ## Terms
 
@@ -84,6 +93,10 @@ The abbreviations are:
      local (FE69: "The primes in the above serve to introduce new names").
    - *Decision.* A prime's scope is the whole lambda, not the `begin … end`
      around it. Each name is primed only once in every example.
+   - *Decision.* The 1982 notation has no primes. In its `mem`, `p` and
+     `sl` are local and `mem` is not. Here, inside a lambda, a name that the
+     body uses but never applies, and that the lambda does not bind, is
+     local; a name it applies belongs to the whole text.
 
 7. *Source.* **The local variables of an alternative are created when it is
    chosen.** E90 p. 8 calls them existentially quantified.
@@ -110,7 +123,25 @@ The abbreviations are:
 
 10. *Source.* **An equation between two different uninstantiated variables
     is suspended** "and associated with both x and y" (E90 p. 11). It is
-    processed again when either variable is instantiated. So a derivation
+    processed again when either variable is instantiated.
+    - *Source.* **A primitive relation stays associated with every variable
+      it was associated with**, and comes back each time one of them is
+      bound, even after it has been elaborated. E82 p. 123 says binding "a
+      variable ... automatically returns any relations associated with that
+      variable to the list of relations still to be elaborated", and its
+      example shows w*2 = 14 on that list twice, and 2+14 = 16 "found
+      satisfied" after it was already elaborated. Equations and arithmetic
+      behave this way here. Anything else that waits (an application, a
+      `not`, `tout`) comes back once. The first version of this
+      reconstruction returned every process once. E82 changed it.
+    - *Decision, on conflicting evidence.* **A returned relation goes to the
+      head of the list.** E82 says the relations "appended", but the lists
+      it prints come out only if they go to the head. Appended to the end,
+      the list it prints as (2+14 = 16; w*2 = 14; w*2 = 14) would be (w*2 =
+      14; 2+14 = 16; w*2 = 14), and its next step, "The first relation is
+      examined ... and found satisfied", would be false. The bindings at the
+      end are the same either way (`tests/historical.rs`, `e82_p123_*`).
+      *Experiment.* `--wake back` appends them. So a derivation
     can finish with suspended equations: its "binding environment exhibits
     a 'partially' solved form constrained by the suspended equations" (p.
     12). `absys` shows these. Asked for `U` after `rev([1,2,U],[V|L])`, it
@@ -154,8 +185,18 @@ The abbreviations are:
     - *Experiment.* `--search depth-first` elaborates the first derivation
       until it fails or hibernates, as a backtracking Prolog would.
     - Kowalski (1988) credits Absys with "the central role of
-      backtracking". E90 says nothing of backtracking. This reconstruction
-      follows E90, the account of one of the designers.
+      backtracking", and E82 p. 122 says: "each conjunction notionally
+      constituting a separate (parallel) computation branch ... In practice,
+      of course, the non-determinism was handled by appropriate differential
+      record keeping and backtracking in a similar spirit to Prolog
+      implementations." So the designer's own accounts disagree: in 1982
+      the implementation backtracked; in 1990 it "used a 'fair' search
+      rule". Backtracking and fairness are compatible only if the
+      backtracking interleaved the branches, which E82 does not say.
+    - *Decision, on conflicting evidence.* The derivations here are
+      elaborated fairly, as E90 says, which is also the "notional" meaning
+      E82 gives. `--search depth-first` is the backtracking reading. Nothing
+      published gives a result that tells the two apart.
 
 15. *Decision, on conflicting evidence.* **Within a derivation, the body of
     an application takes the place of the literal applied.** So its

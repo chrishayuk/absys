@@ -38,7 +38,7 @@ test("a text not in the notation stops with its place", () => {
 });
 
 test("every example agrees with the native absys", { skip: !existsSync(native) && "no native build" }, () => {
-  for (const f of readdirSync(examples).filter((n) => n.endsWith(".abs") || n.endsWith(".ab1"))) {
+  for (const f of readdirSync(examples).filter((n) => /\.ab[s12]$/.test(n))) {
     const text = readFileSync(examples + f, "utf8");
     const mine = run(text, ["--env"], f);
     const theirs = spawnSync(native, ["--env", examples + f]);

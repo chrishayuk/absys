@@ -11,6 +11,8 @@ use std::fs;
 fn output(info: &str, code: &str) -> String {
     let notation = if info.contains("1969") {
         Notation::Absys1
+    } else if info.contains("1982") {
+        Notation::Elcock1982
     } else {
         Notation::Retrospective
     };

@@ -110,13 +110,17 @@ pub fn parse(n: Notation, text: &str) -> Result<Vec<Item>, Error> {
     match n {
         Notation::Retrospective => syntax::parse(text),
         Notation::Absys1 => syntax1969::parse(text),
+        Notation::Elcock1982 => syntax1969::parse_1982(text),
     }
 }
 
-/// The notation a file is in, from its name: `.ab1` is the 1969 notation.
+/// The notation a file is in, from its name: `.ab1` is the 1969 notation,
+/// `.ab2` the 1982 one.
 pub fn notation_for(path: &str) -> Notation {
     if path.ends_with(".ab1") {
         Notation::Absys1
+    } else if path.ends_with(".ab2") {
+        Notation::Elcock1982
     } else {
         Notation::Retrospective
     }

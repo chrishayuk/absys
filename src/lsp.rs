@@ -30,7 +30,7 @@ pub const TOKEN_TYPES: &[&str] = &[
     "macro",    // 7 the primitives: tout, set, null
 ];
 
-const KEYWORDS: &[&str] = &["lambda", "or", "not", "begin", "end", "key"];
+const KEYWORDS: &[&str] = &["lambda", "or", "and", "not", "begin", "end", "key"];
 const PRIMITIVES: &[&str] = &["tout", "set", "null"];
 
 /// (start, length, type) in characters, for one line.
@@ -106,7 +106,7 @@ pub fn line_tokens(text: &str, n: Notation) -> Vec<(usize, usize, usize)> {
             i = j;
             continue;
         }
-        if "=|&;+-*/".contains(c) {
+        if "=|&;+-*/<>".contains(c) {
             out.push((i, if c == '=' && cs.get(i + 1) == Some(&'>') { 2 } else { 1 }, 4));
         }
         i += 1;
@@ -400,6 +400,7 @@ fn completion(text: &str, n: Notation) -> Json {
         .chain(match n {
             Notation::Retrospective => ["set"].iter(),
             Notation::Absys1 => ["begin", "end", "key", "null"][..].iter(),
+            Notation::Elcock1982 => ["key", "and"][..].iter(),
         })
         .map(|k| {
             obj([

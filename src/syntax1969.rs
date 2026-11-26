@@ -43,9 +43,9 @@ struct Token {
     line: usize,
 }
 
-const KEYWORDS: &[&str] = &["lambda", "begin", "end", "or", "key"];
+const KEYWORDS: &[&str] = &["lambda", "begin", "end", "or", "and", "key"];
 const SYMBOLS: &[&str] = &[
-    "=>", "=", "(", ")", "[", "]", "{", "}", ",", ";", "&", "+", "-", "*", "/",
+    "=>", "<<", ">>", "=", "(", ")", "[", "]", "{", "}", ",", ";", "&", "|", "+", "-", "*", "/",
 ];
 
 fn err<T>(span: Span, m: impl Into<String>) -> Result<T, Error> {
@@ -149,6 +149,8 @@ struct P<'a> {
     end: usize,
     /// the names primed in each lambda being read
     primes: Vec<HashSet<String>>,
+    /// Elcock 1982's notation: << … >>, `and`, and locals without primes
+    n1982: bool,
 }
 
 impl P<'_> {
@@ -202,7 +204,12 @@ impl P<'_> {
         matches!(
             self.peek(),
             Some(
-                Tok::Id(..) | Tok::Num(_) | Tok::Quote(_) | Tok::Str(_) | Tok::Sym("[" | "{" | "(") | Tok::Kw("begin")
+                Tok::Id(..)
+                    | Tok::Num(_)
+                    | Tok::Quote(_)
+                    | Tok::Str(_)
+                    | Tok::Sym("[" | "{" | "(" | "<<")
+                    | Tok::Kw("begin")
             )
         )
     }
@@ -211,8 +218,11 @@ impl P<'_> {
     fn conjunction(&mut self) -> Result<Assertion, Error> {
         let start = self.here();
         let mut parts = vec![];
+        // `and` may be written between assertions (1982); side by side is the same
+        while self.eat_kw("and") {}
         while self.starts_assertion() {
             parts.push(self.assertion()?);
+            while self.eat_kw("and") {}
         }
         if parts.len() == 1 {
             return Ok(parts.pop().unwrap());
@@ -240,15 +250,24 @@ impl P<'_> {
                 a => Assertion::And(vec![a], span),
             });
         }
-        if self.eat_sym("{") {
+        if self.is_sym("{") || self.is_sym("<<") {
+            let close = if self.eat_sym("{") {
+                "}"
+            } else {
+                self.i += 1; // <<
+                ">>"
+            };
             let mut alts = vec![self.conjunction()?];
             while self.eat_kw("or") {
                 alts.push(self.conjunction()?);
             }
-            self.expect_sym("}", "to close the `{`")?;
+            self.expect_sym(close, "to close the bracket")?;
             let span = start.to(self.last());
             return Ok(if alts.len() == 1 {
-                alts.pop().unwrap()
+                match alts.pop().unwrap() {
+                    Assertion::And(v, _) => Assertion::And(v, span),
+                    a => Assertion::And(vec![a], span),
+                }
             } else {
                 Assertion::Or(alts, span)
             });
@@ -374,7 +393,8 @@ impl P<'_> {
                 if !self.eat_sym("]") {
                     loop {
                         items.push(self.term()?);
-                        if self.eat_sym("&") {
+                        // [h&t] and [a;b] (1969); [h|t] and [a,b] (1982)
+                        if self.eat_sym("&") || self.eat_sym("|") {
                             tail = Some(Box::new(self.term()?));
                             self.expect_sym("]", "after the tail of the list")?;
                             break;
@@ -382,7 +402,9 @@ impl P<'_> {
                         if self.eat_sym("]") {
                             break;
                         }
-                        self.expect_sym(";", "between the items of a list, or `]`")?;
+                        if !self.eat_sym(",") {
+                            self.expect_sym(";", "between the items of a list, or `]`")?;
+                        }
                     }
                 }
                 return Ok(Expr::List(items, tail, span.to(self.last())));
@@ -423,7 +445,7 @@ impl P<'_> {
                 key.push(self.ident("a variable after `key`")?);
             }
         }
-        if !(self.is_kw("begin") || self.is_sym("{")) {
+        if !(self.is_kw("begin") || self.is_sym("{") || self.is_sym("<<")) {
             return err(
                 self.here(),
                 format!(
@@ -434,7 +456,20 @@ impl P<'_> {
         }
         self.primes.push(HashSet::new());
         let body = self.assertion()?;
-        let primed = self.primes.pop().unwrap();
+        let mut primed = self.primes.pop().unwrap();
+        if self.n1982 {
+            // No primes in 1982: a name the body uses but never applies, and
+            // the lambda does not bind, is local to it (docs/decisions.md, rule 6).
+            let bound: HashSet<&str> = params.iter().chain(&result).map(|(n, _)| n.as_str()).collect();
+            let mut used = HashSet::new();
+            let mut applied = HashSet::new();
+            names(&body, &mut used, &mut applied);
+            for n in used {
+                if !applied.contains(&n) && !bound.contains(n.as_str()) {
+                    primed.insert(n);
+                }
+            }
+        }
         let body = localise(body, &primed);
         let span = start.to(body.span());
         Ok(Expr::Lambda(Rc::new(Lambda {
@@ -445,6 +480,57 @@ impl P<'_> {
             body,
             span,
         })))
+    }
+}
+
+/// The names a body uses, and those of them it applies.
+fn names(a: &Assertion, used: &mut HashSet<String>, applied: &mut HashSet<String>) {
+    fn e(x: &Expr, used: &mut HashSet<String>, applied: &mut HashSet<String>) {
+        match x {
+            Expr::Name(n, _) => {
+                used.insert(n.clone());
+            }
+            Expr::List(items, tail, _) => {
+                items.iter().for_each(|i| e(i, used, applied));
+                if let Some(t) = tail {
+                    e(t, used, applied);
+                }
+            }
+            Expr::Ar(_, a, b, _) => {
+                e(a, used, applied);
+                e(b, used, applied);
+            }
+            Expr::App(f, args, _) => {
+                if let Expr::Name(n, _) = &**f {
+                    applied.insert(n.clone());
+                }
+                args.iter().for_each(|x| e(x, used, applied));
+            }
+            _ => {}
+        }
+    }
+    match a {
+        Assertion::Eq(l, r, _) => {
+            e(l, used, applied);
+            e(r, used, applied);
+        }
+        Assertion::Call(f, args, _) => {
+            if let Expr::Name(n, _) = f {
+                applied.insert(n.clone());
+            }
+            args.iter().for_each(|x| e(x, used, applied));
+        }
+        Assertion::Tout(l, t, _) => {
+            e(l, used, applied);
+            e(t, used, applied);
+        }
+        Assertion::And(v, _) | Assertion::Or(v, _) => v.iter().for_each(|x| names(x, used, applied)),
+        Assertion::Not(x, _) => names(x, used, applied),
+        Assertion::Set(of, g, into, _) => {
+            e(of, used, applied);
+            names(g, used, applied);
+            e(into, used, applied);
+        }
     }
 }
 
@@ -478,13 +564,26 @@ fn localise(a: Assertion, primed: &HashSet<String>) -> Assertion {
     }
 }
 
+/// Reads a text in the 1969 notation.
 pub fn parse(text: &str) -> Result<Vec<Item>, Error> {
+    parse_with(text, false)
+}
+
+/// Reads a text in the notation of Elcock 1982: the 1969 notation with
+/// `<< … >>` for `{ … }`, `and` between assertions, lists as `[a,b]` and
+/// `[h|t]`, and no primes (sources/notes/elcock-1982.md).
+pub fn parse_1982(text: &str) -> Result<Vec<Item>, Error> {
+    parse_with(text, true)
+}
+
+fn parse_with(text: &str, n1982: bool) -> Result<Vec<Item>, Error> {
     let toks = lex(text)?;
     let mut p = P {
         toks: &toks,
         i: 0,
         end: text.len(),
         primes: vec![],
+        n1982,
     };
     let mut items = vec![];
     while p.i < toks.len() {
@@ -492,7 +591,16 @@ pub fn parse(text: &str) -> Result<Vec<Item>, Error> {
             return err(p.here(), format!("{} cannot begin an assertion", p.describe()));
         }
         let line = toks[p.i].line;
-        let a = p.assertion()?;
+        let mut a = p.assertion()?;
+        // a and b and c: one assertion, a conjunction (1982)
+        if p.is_kw("and") {
+            let mut parts = vec![a];
+            while p.eat_kw("and") {
+                parts.push(p.assertion()?);
+            }
+            let span = parts[0].span().to(parts.last().unwrap().span());
+            a = Assertion::And(parts, span);
+        }
         items.push(Item {
             span: a.span(),
             assertion: a,

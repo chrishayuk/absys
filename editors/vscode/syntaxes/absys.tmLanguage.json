@@ -36,7 +36,7 @@
       ]
     },
     "keywords": {
-      "match": "\\b(lambda|or|not|begin|end|key)\\b",
+      "match": "\\b(lambda|or|and|not|begin|end|key)\\b",
       "name": "keyword.control.absys"
     },
     "primitives": {
@@ -69,6 +69,7 @@
     "operators": {
       "patterns": [
         { "match": "=>", "name": "keyword.operator.result.absys" },
+        { "match": "<<|>>", "name": "punctuation.bracket.absys" },
         { "match": "=", "name": "keyword.operator.equals.absys" },
         { "match": "[|&]", "name": "keyword.operator.list.absys" },
         { "match": "[+\\-*/]", "name": "keyword.operator.arithmetic.absys" },

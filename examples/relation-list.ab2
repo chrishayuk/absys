@@ -1,0 +1,6 @@
+% Elcock 1982, p. 123: "Suppose we have the Absys program
+%   u+v = 16  and  w*u = v  and  u+10 = 12
+% and suppose the list of relations is initially processed in this order."
+% The binding environment at the end: u is 2, v is 14, w is 7.
+% absys relation-list.ab2 --trace shows each relation examined in turn.
+u+v = 16  and  w*u = v  and  u+10 = 12

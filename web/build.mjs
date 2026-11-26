@@ -10,15 +10,15 @@ execSync("cargo build --release --target wasm32-wasip1", { cwd: root, stdio: "in
 copyFileSync(`${root}target/wasm32-wasip1/release/absys.wasm`, `${root}web/absys.wasm`);
 
 // The order the playground lists them in: the sources' examples first.
-const first = ["assertions-not-assignments", "append", "reverse", "students", "setdiff", "assertions", "alternatives", "triples", "map"];
+const first = ["assertions-not-assignments", "append", "reverse", "students", "setdiff", "assertions", "alternatives", "triples", "map", "relation-list", "mem-1982"];
 const read = (dir) =>
   readdirSync(`${root}${dir}`)
-    .filter((f) => f.endsWith(".abs") || f.endsWith(".ab1"))
+    .filter((f) => /\.ab[s12]$/.test(f))
     .map((f) => {
       const text = readFileSync(`${root}${dir}/${f}`, "utf8");
-      const name = f.replace(/\.ab[s1]$/, "");
+      const name = f.replace(/\.ab[s12]$/, "");
       const title = ((/^%\s*(.*)$/m.exec(text) || [, name])[1]).replace(/[:.]$/, "");
-      return { name, file: `${dir}/${f}`, notation: f.endsWith(".ab1") ? "1969" : "1990", title, text, group: dir };
+      return { name, file: `${dir}/${f}`, notation: f.endsWith(".ab1") ? "1969" : f.endsWith(".ab2") ? "1982" : "1990", title, text, group: dir };
     });
 const examples = read("examples").sort((a, b) => {
   const i = (x) => (first.indexOf(x.name) + 1 || 99);

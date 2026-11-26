@@ -22,7 +22,8 @@ options:
   --select in-place|fifo          which literal of a derivation next (default in-place)
   --negation immediate|delayed    when not is elaborated (default immediate, as Absys)
   --steps N               the budget of steps for each assertion (default 100000)
-  --notation 1990|1969    (default from the file name: .ab1 is 1969, anything else 1990)";
+  --wake front|back       where a returned relation goes in the goal (default front)
+  --notation 1990|1969|1982  (default from the file name: .ab1 is 1969, .ab2 1982, anything else 1990)";
 
 const DECISIONS: &str = include_str!("../docs/decisions.md");
 
@@ -79,12 +80,20 @@ fn args() -> Args {
                     _ => fail("--negation immediate|delayed"),
                 }
             }
+            "--wake" => {
+                a.opts.wake = match value(&mut i).as_str() {
+                    "front" => absys::machine::Wake::Front,
+                    "back" => absys::machine::Wake::Back,
+                    _ => fail("--wake front|back"),
+                }
+            }
             "--steps" => a.budget = value(&mut i).parse().unwrap_or_else(|_| fail("--steps N")),
             "--notation" => {
                 a.notation = Some(match value(&mut i).as_str() {
                     "1969" => Notation::Absys1,
+                    "1982" => Notation::Elcock1982,
                     "1990" => Notation::Retrospective,
-                    _ => fail("--notation 1990|1969"),
+                    _ => fail("--notation 1990|1969|1982"),
                 })
             }
             "-h" | "--help" => {
@@ -178,7 +187,7 @@ fn verify(dir: &str, opts: Opts) {
         .unwrap_or_else(|e| fail(&format!("{dir}: {e}")))
         .filter_map(|e| e.ok())
         .map(|e| e.file_name().to_string_lossy().into_owned())
-        .filter(|n| n.ends_with(".abs") || n.ends_with(".ab1"))
+        .filter(|n| n.ends_with(".abs") || n.ends_with(".ab1") || n.ends_with(".ab2"))
         .collect();
     names.sort();
     let (mut good, mut bad, mut missing) = (0, 0, 0);
@@ -260,10 +269,10 @@ fn repl(file: Option<String>, a: Args) {
     if tty {
         println!(
             "Absys ({} notation). .help for help.",
-            if opts.notation == Notation::Absys1 {
-                "1969"
-            } else {
-                "1990"
+            match opts.notation {
+                Notation::Absys1 => "1969",
+                Notation::Elcock1982 => "1982",
+                Notation::Retrospective => "1990",
             }
         );
     }

@@ -1,4 +1,4 @@
-# ABSYS-E01 to E05: experiments on the reconstruction
+# ABSYS-E01 to E06, and E09: experiments on the reconstruction
 
 These are experiments on the reconstructed machine. They are not claims about
 the Elliott 4120 program, which does not survive. Three kinds of statement
@@ -197,6 +197,83 @@ lists of suspended processes, which is a graph of this kind. Nothing here
 claims the Aberdeen program drew or used it as one. The playground draws the
 derivation tree and the suspended equations after each assertion.
 
+## E06. Does the machine keep the list of relations Elcock printed in 1982?
+
+**Yes, every list and every association list in it, once two rules are
+changed to follow it. One of the two contradicts a word of the same
+passage.**
+
+Elcock (1982, p. 123; `sources/notes/elcock-1982.md`) walks through
+`u+v = 16 and w*u = v and u+10 = 12` relation by relation, printing the
+association lists and the list of relations still to be elaborated. The
+1982 notation reads that program as written (`examples/relation-list.ab2`).
+`tests/historical.rs` (`e82_p123_the_list_of_relations`) steps the machine
+one relation at a time and compares each state:
+
+| after | Elcock prints | the machine |
+|---|---|---|
+| u+v = 16 and w*u = v examined | (u: u+v = 16; w*u = v); (v: u+v = 16; w*u = v); (w: w*u = v) | the same |
+| u+10 = 12: u is 2 | (2+v = 16; w*2 = v) | the same |
+| 2+v = 16: v is 14 | (2+14 = 16; w*2 = 14; w*2 = 14) | the same |
+| 2+14 = 16 "found satisfied"; w*2 = 14: w is 7 | (7*2 = 14; 7*2 = 14) | the same |
+| both "found satisfied" | empty | empty; u = 2, v = 14, w = 7 |
+
+Findings:
+
+- **A relation goes back on the list for each of its variables that is
+  bound, even after it has been elaborated.** That is why w*2 = 14 is on the
+  list twice, and why 2+14 = 16 is examined again and "found satisfied".
+  The first version of the machine returned a suspended relation only once,
+  and printed different lists. It now follows E82 for equations and
+  arithmetic (`docs/decisions.md`, rule 10).
+- **The printed lists contradict the word "appended".** Elcock says each
+  returned list is "appended", but his third list comes out only if the
+  returned relations go to the head of the list. Appended to the end it
+  would be (w*2 = 14; 2+14 = 16; w*2 = 14), and the next relation examined
+  would bind w, not be "found satisfied" (`e82_p123_appended_literally`).
+  The final bindings are the same either way. The example settles where
+  the relations go, if it was transcribed from a run; the word settles it
+  the other way, if the example was written out by hand.
+- **The 1982 paper contradicts the 1990 one on the search.** In 1982, "the
+  non-determinism was handled by appropriate differential record keeping
+  and backtracking in a similar spirit to Prolog implementations"; in 1990,
+  "the implementation of Absys used a 'fair' search rule". It also dates
+  Absys "essentially completed in 1968", where 1990 has 1967. Neither
+  example in either paper tells a fair search from a backtracking one.
+- E82's second example, `mem(x,[1,2,3])` then `mem(x,[2,4,6])` with `mem`
+  keyed on its list, comes out as it says: three derivations, then one,
+  x = 2 (`e82_p122_mem_with_a_key`).
+
+## E09. Where does data-directed elaboration stop?
+
+**At the first system of equations that needs elimination, as Elcock said
+in 1982.**
+
+Each arithmetic relation is taken up when two of its three numbers are
+known (Foster's "pass sets"). So a system is solved exactly when it can be
+ordered so that each equation, in turn, has one unknown left:
+
+| text | result |
+|---|---|
+| `research/e09-triangular.ab1`: x + y + z = 12, y + z = 7, z = 3 | x = 5, y = 4, z = 3, in all 6 orders |
+| `research/e09-simultaneous.ab1`: x + y = 10, x - y = 4 | nothing inferred: both relations hibernate, each waiting for a second number |
+
+Elcock (1982, p. 124): "a naive dynamic data directed flow of elaboration
+... of itself rapidly runs out of steam ... much more sophisticated
+aggregation and solution methods would be necessary to deal with a
+conjunction of a general set of linear equations in n variables. Even the
+task of recognizing what aggregations of individual conjuncts might lend
+themselves to reorganization as a specified 'higher' relation (e.g. the
+relation 'simult-eqs(L)' ...) is challenging to say the least."
+
+The machine shows the boundary but does not cross it. The suspended
+relations it is left holding are the input such an aggregation would need:
+in the simultaneous case, two relations sharing the same two unknowns, which
+the suspension graph of `absys graph` draws as a cycle. Recognising that
+shape and handing it to an eliminator, as the Nine Chapters' counting board
+or Babbage's program of 1837 would solve it, is the step Elcock named and
+did not take. It is not attempted here.
+
 ## Still to do
 
 - Compare against running Prolog programs, the same programs in their
@@ -207,4 +284,8 @@ derivation tree and the suspended equations after each assertion.
   processing.
 - Elcock and Gray (1988), *Absys, equation solving and logic programming*,
   the "fuller description" the retrospective cites (its reference [9]). It
-  may settle decisions 15, 19 and 20.
+  may settle decisions 10, 14, 15, 19 and 20.
+- Elcock, McGregor and Murray (1972), "Data directed control and operating
+  systems", which E82 cites for the evaluation mechanism "in detail".
+- Cost hints (F68's "a number may be associated with an assertion to
+  indicate the cost of attempting it"), as an experiment, and ABSET.
