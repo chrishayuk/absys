@@ -223,7 +223,7 @@ Findings:
   bound, even after it has been elaborated.** That is why w*2 = 14 is on the
   list twice, and why 2+14 = 16 is examined again and "found satisfied".
   The first version of the machine returned a suspended relation only once,
-  and printed different lists. It now follows E82 for equations and
+  which cannot give these lists. It now follows E82 for equations and
   arithmetic (`docs/decisions.md`, rule 10).
 - **The printed lists contradict the word "appended".** Elcock says each
   returned list is "appended", but his third list comes out only if the

@@ -20,7 +20,7 @@ The abbreviations are:
 - **F68**: Foster, "Assertions: programs written without specifying
   unnecessary order", *Machine Intelligence 3* (1968).
 - **E82**: Elcock, "Goal selection strategies in Horn clause programming",
-  *Proc. 4th CSCSI/SCEIO Conference* (1982) 121-124, read from the page
+  *Proc. 4th Biennial CSCSI/SCEIO Conference* (1982) 121-124, read from the page
   scans (`sources/notes/elcock-1982.md`). It was found after the first
   version of this reconstruction, and the rules it changed say so.
 

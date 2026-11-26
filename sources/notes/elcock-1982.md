@@ -1,9 +1,9 @@
 # Elcock 1982: what was read, and how
 
 E. W. Elcock, "Goal selection strategies in Horn clause programming",
-*Proceedings of the Fourth National Conference of the Canadian Society for
+*Proceedings of the Fourth Biennial Conference of the Canadian Society for
 Computational Studies of Intelligence* (CSCSI/SCEIO), University of
-Saskatchewan, 1982, pp. 121-124.
+Saskatchewan, Saskatoon, 17-19 May 1982, pp. 121-124.
 
 The proceedings are a 250-page scan, put online by CAIAC:
 https://www.caiac.ca/sites/default/files/shared/canai-archives/1982_CSCSI_Proceedings-opt.pdf
@@ -20,7 +20,9 @@ Earlier work did not have it.
 It is a short paper comparing the "incompleteness" of Prolog's evaluation
 with that of Absys. Its account of Absys "draws heavily on Foster and Elcock
 (1969)". It is the only source seen that walks through Absys's list of
-relations step by step.
+relations step by step. For the mechanism "in detail" it points to Elcock,
+McGregor and Murray, "Data directed control and operating systems",
+*British Computer Journal* 15(2) (1972) 125-129, not yet read here.
 
 ## Passages used, verbatim
 
@@ -168,8 +170,8 @@ Abset and Prolog". This is presumably a slip for Absys.
    (still on the list). So the list holds w*2=14 twice. Each relation
    comes back once for each of its variables that is bound, and runs again,
    to be "found satisfied". The first version of this reconstruction
-   returned a suspended relation only once. It now follows the paper for
-   primitive relations (`docs/decisions.md`, rule 10).
+   returned a suspended relation only once, which cannot give these lists.
+   It now follows the paper for primitive relations (`docs/decisions.md`, rule 10).
 
 2. **"Appended" does not give the list he prints.** After 2+v=16 binds v,
    the list holds one relation, w*2=14. Appending v's two relations to the
