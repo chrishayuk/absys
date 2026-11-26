@@ -117,6 +117,15 @@ pp. 12-13), variable for variable.
 - **Data-directed elaboration stops at the first system that needs
   elimination**, as Elcock said in 1982: x + y = 10 and x - y = 4 leave both
   relations waiting (E09).
+- **Run on SWI-Prolog, the same programs give the same answers where both
+  answer (E07).** Prolog's left-to-right rule loses three:
+  - an endless first alternative;
+  - left recursion over a known list;
+  - Elcock's arithmetic in his own order.
+
+  Absys gets all three. Coroutines on Foster's pass sets (`when/2`) and
+  CLP(FD) recover them in modern Prolog. Only CLP(Q), which treats the
+  equations as one system, solves x + y = 10, x - y = 4.
 - **Fair search finds what depth-first search never reaches.**
   `{loop(A)} or {A = 1}` gives `A = 1` while the loop runs on. Left
   recursion over known data terminates under either search, because
@@ -130,7 +139,7 @@ pp. 12-13), variable for variable.
   [`sources/notes/elcock-1990.md`](sources/notes/elcock-1990.md).
 
 The experiments, with their numbers, are in
-[`docs/research.md`](docs/research.md) (ABSYS-E01 to E06, and E09).
+[`docs/research.md`](docs/research.md) (ABSYS-E01 to E07, and E09).
 
 ## Install and use
 

@@ -1,4 +1,4 @@
-# ABSYS-E01 to E06, and E09: experiments on the reconstruction
+# ABSYS-E01 to E07, and E09: experiments on the reconstruction
 
 These are experiments on the reconstructed machine. They are not claims about
 the Elliott 4120 program, which does not survive. Three kinds of statement
@@ -12,10 +12,9 @@ are kept apart:
   with the command given beside it, and the numbers are from this
   repository's build.
 
-No Prolog system was installed where these were run. Where Prolog is
-mentioned, it is described from its well-known standard behaviour, and
-nothing was run. A side-by-side comparison with a running Prolog is still to
-do.
+E01 to E06 describe Prolog from its well-known standard behaviour. E07 then
+runs the same programs on SWI-Prolog, and confirms each of those
+descriptions.
 
 The texts are in `research/`, except where an example from `examples/` is
 named.
@@ -161,7 +160,7 @@ Findings:
   search.** Equations are elaborated as they arise (decision 12), so `L =
   ['a'|M]` instantiates M before `as(M)` is applied, and the recursion is
   bounded. Prolog's leftmost rule calls `as(M)` with M unbound first, and
-  descends for ever (expected from Prolog's standard rule, not run here).
+  descends for ever (confirmed on SWI-Prolog in E07).
   This holds under `--select fifo` too.
 
 ## E05. Can a computation be represented as an evolving graph of constraints?
@@ -244,6 +243,71 @@ Findings:
   keyed on its list, comes out as it says: three derivations, then one,
   x = 2 (`e82_p122_mem_with_a_key`).
 
+## E07. The same experiments on a running Prolog
+
+**The answers agree, except where Absys waits and Prolog cannot. The
+difference is control, not meaning, and modern Prolog recovers most of it
+with coroutines and constraints, which were added later.**
+
+`research/e07/e07.pl` runs the programs of E01 to E06 and E09 on SWI-Prolog
+11.0.1 (`swipl -q research/e07/e07.pl`; recorded output in
+`research/e07/e07.out`). Each query runs under a limit of a million
+inferences, so one that would go on for ever is reported as such. The
+Prolog programs are the usual clausal ones, with the clauses in the same
+order as the alternatives of the Absys procedures.
+
+| experiment | Absys (this reconstruction) | SWI-Prolog |
+|---|---|---|
+| `app(R, S, [1,2])` | 3 derivations | 3 answers, same |
+| `app([1,2], S, T)` | `T = [1,2\|N₂]`, `S = N₂` suspended | `T = [1,2\|S]`: one variable, unified at once |
+| `rev(R, [1,2,3])` | `[3,2,1]` found, the search goes on | `[3,2,1]`, then the limit runs out |
+| `not(X = 1)` then `X = 2`, and the other order | none; `X = 2` | fails; `X = 2`: the same |
+| `setdiff([1,2,3,4], [2,4,6], D)` | `[1,3]` | `[1,3]` |
+| students: Brown, Smith | yes, no | yes, no |
+| a procedure applied before it is defined | the application waits for the definition | `existence_error` |
+| `{loop(A)} or {A = 1}` | `A = 1` found, the loop still running | no answer: the limit runs out |
+| `as` (left recursive) on a known list | terminates | no answer: the limit runs out |
+| E06, `u+v=16, w*u=v, u+10=12`, in that order, with `is/2` | u = 2, v = 14, w = 7 | `instantiation_error` |
+| the same, reordered by hand | the same | u = 2, v = 14, w = 7 |
+| the same, as coroutines on Foster's pass sets (`when/2`) | the same | u = 2, v = 14, w = 7 |
+| the same in CLP(FD) | the same | u = 2, v = 14, w = 7 |
+| E09, `x+y=10, x-y=4`, pass sets as coroutines | nothing inferred, both wait | nothing inferred, both wait |
+| the same in CLP(FD) | | residual constraints; with labelling, 7, 3 |
+| the same in CLP(Q) | | 7, 3 |
+
+Findings:
+
+- **Where both systems answer, they give the same answers.** Elcock's
+  claim that a "pure" Absys was an implementation of pure Prolog holds for
+  every program here. That includes the unsafe `not`, which goes wrong the
+  same way in both.
+- **Prolog's left-to-right rule is what fails, three times:**
+  - a first alternative that never ends hides the second;
+  - a left-recursive definition loops even when its list is known;
+  - Elcock's arithmetic in his order stops at the first relation, as his
+    1982 paper says it would ("all Prolog implementions [sic] of which I
+    am aware would fail at the first relation").
+
+  Absys's data-directed rule, equations first and the rest when worthwhile,
+  gets through all three.
+- **What Absys did by default, Prolog later gained as options.** The
+  relation list of 1982, written as coroutines that wait for two of three
+  numbers (`when/2`), runs in Elcock's order and gives his bindings. So does
+  CLP(FD). The control Absys had in its evaluator, Prolog recovered in
+  libraries.
+- **Neither crosses the line of E09 by data-directed elaboration alone.**
+  Coroutines on pass sets, like Absys, infer nothing from x + y = 10 and
+  x - y = 4. CLP(FD) propagation leaves constraints too, and needs a search
+  (labelling) to finish. CLP(Q) solves it outright, because it treats the
+  two equations as one linear system: the "higher relation" Elcock asked
+  for in 1982.
+- **What has no counterpart is the incremental session.** A procedure
+  applied before it exists is an error in Prolog, not a waiting
+  application. Each Prolog query is a computation of its own, so a later
+  query does not reach into a hibernating one, as `rev([5],[V])` does in
+  E03. Coroutines give that within one query; between queries, the binding
+  environment is gone.
+
 ## E09. Where does data-directed elaboration stop?
 
 **At the first system of equations that needs elimination, as Elcock said
@@ -276,9 +340,6 @@ did not take. It is not attempted here.
 
 ## Still to do
 
-- Compare against running Prolog programs, the same programs in their
-  homogeneous form (Elcock 1990, §2.3), now that the reconstruction passes
-  its acceptance tests.
 - The full text of Foster and Elcock 1969. Only extracts have been seen. Its
   last pages may describe negation and sets in Absys 1, or the order of
   processing.
