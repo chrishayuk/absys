@@ -3,9 +3,10 @@
 `A or B` asserts alternatives. When an `or` is reached, it distributes
 through the goal of the computation it is in. Elcock (1990, p. 9) says it
 creates "two new goals which can notionally be regarded as initiating
-parallel derivations". Foster and Elcock (1969) put it this way: "the
-conjunctions in effect constitute parallel non-interacting programs.
-Unsatisfiable conjunctions disappear when unsatisfiability is detected."
+parallel derivations". Foster and Elcock (1969) put it this way:
+"Unsatisfiable conjunctions disappear when unsatisfiability is detected",
+and the conjunctions "in effect constitute parallel non-interacting
+programs".
 
 So the computation is a set of **derivations**. Each has its own bindings,
 its own suspended processes, and its own rest of the goal. A derivation in

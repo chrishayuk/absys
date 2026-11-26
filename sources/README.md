@@ -73,7 +73,7 @@ Not seen:
 
 | | when | what is known of it | here |
 |---|---|---|---|
-| F68's proposal | written 1967 | ideas, not a language: assertions joined by `and`, `new` variables, cost and pass-set ordering | pass sets for arithmetic (decision 23) |
+| F68 | given 1967, published 1968 | a design paper for a system then "partly implemented on an Elliott 4120": assertions joined by `and`, `new` variables, cost and pass-set ordering | pass sets for arithmetic (decision 23) |
 | **Absys 1** | "a working on-line incremental compiler" by 1968 (FE69) | the 1969 notation: `begin … end`, `{… or …}`, `[a;b]`, `[h&t]`, primes, `lambda … => z key …`, arithmetic | `.ab1` files |
 | **Absys-4** | "circa 1968" (E90) | E90 describes "a subset" of it, "in a 'modern' redescription" with "slight liberties" in the syntax, adding `not` and `set` | `.abs` files |
 

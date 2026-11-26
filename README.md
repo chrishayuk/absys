@@ -43,10 +43,10 @@ pp. 12-13), variable for variable.
 ## Status
 
 - **The sources.** No Absys program text, listing or manual from Aberdeen is
-  known to survive. The reconstruction rests on:
+  known to us. The reconstruction rests on:
   - Elcock's 1990 retrospective, read in full from the page scans;
   - Foster's 1968 *Assertions* paper, read in full;
-  - OCR extracts of about two thirds of Foster and Elcock's 1969
+  - OCR extracts of most of the sections of Foster and Elcock's 1969
     introduction to Absys 1.
 
   See [`sources/README.md`](sources/README.md).
@@ -90,16 +90,19 @@ pp. 12-13), variable for variable.
   - `not(X = 1)` then `X = 2` has no derivation; the other order has `X = 2`.
     That is Elcock's "Absys and PROLOG … do not use a safe computation
     rule".
-- **Elcock's own `setdiff` decides how a derivation chooses its next
-  literal.**
+- **Elcock's own `setdiff` favours one answer to how a derivation chose its
+  next literal.** The paper prints only its definition; the inputs and the
+  definition of `mem` used here are ours.
   - Taking literals strictly in turn, which is a "fair computation rule",
     computes `[1]` for the difference of `[1,2,3,4]` and `[2,4,6]`.
     `not(mem(X, S2))` is then decided before the recursion has instantiated
     X.
   - Putting an applied body in the place of its literal, which is what the
     paper's "replaced by" says, computes `[1,3]`.
-  - The paper says both things. The working example decides it here
-    (`docs/decisions.md`, rule 15).
+  - Taking literals strictly in turn with `not` delayed until its
+    variables are instantiated also computes `[1,3]`, and Elcock mentions
+    delays he does not describe. So the example favours the body in the
+    literal's place without proving it (`docs/decisions.md`, rule 15).
 - **Fair search finds what depth-first search never reaches.**
   `{loop(A)} or {A = 1}` gives `A = 1` while the loop runs on. Left
   recursion over known data terminates under either search, because

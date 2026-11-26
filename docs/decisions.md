@@ -16,7 +16,7 @@ The abbreviations are:
   retrospective and a commentary", *J. Logic Programming* 9 (1990) 1-17.
 - **FE69**: Foster and Elcock, "Absys 1: an incremental compiler for
   assertions; an introduction", *Machine Intelligence 4* (1969). Only OCR
-  extracts covering roughly the first two thirds of the paper have been seen.
+  extracts of most of its sections have been seen, not its last pages.
 - **F68**: Foster, "Assertions: programs written without specifying
   unnecessary order", *Machine Intelligence 3* (1968).
 
@@ -136,10 +136,10 @@ The abbreviations are:
 
 13. *Source.* **`or` distributes through the goal of the derivation it is
     in.** E90 p. 9: it is "essentially creating two new goals which can
-    notionally be regarded as initiating parallel derivations". FE69: "the
-    conjunctions in effect constitute parallel non-interacting programs ...
-    Unsatisfiable conjunctions disappear when unsatisfiability is
-    detected".
+    notionally be regarded as initiating parallel derivations". FE69:
+    "Unsatisfiable conjunctions disappear when unsatisfiability is
+    detected", and, a few sentences later, the conjunctions "in effect
+    constitute parallel non-interacting programs".
     - Each alternative gets a copy of the derivation: its bindings, its
       suspended processes and the rest of its goal.
     - *Decision.* The copy is made when the `or` is reached, which for an
@@ -164,13 +164,21 @@ The abbreviations are:
     - E90 p. 3 also says "Absys used a fair computation rule", and note 9
       says "Absys does not guarantee a particular order of processing of
       conjuncts".
-    - Taking literals strictly in turn (first in, first out) would be fair.
-      But under that rule E90's own `setdiff` example (p. 15) computes
-      `[1]` for the difference of `[1,2,3,4]` and `[2,4,6]` instead of
-      `[1,3]`. The reason is that `not`, which is not safe (rule 18), is
-      then elaborated before the recursion that instantiates its variable.
-    - The examples E90 gives as working are the stronger evidence of how
-      Absys behaved, so the default follows them.
+    - A fair rule, in the sense E90 cites (Lassez and Maher), is one that
+      selects every literal eventually. Taking literals strictly in turn
+      (first in, first out) is one such rule, not the only one.
+    - E90 prints `setdiff` (p. 15) as a definition only, with no query and
+      no result, and does not define `mem`. Run on inputs chosen here,
+      `[1,2,3,4]` and `[2,4,6]`, with `mem` defined here, strictly in turn
+      it computes `[1]`, not `[1,3]`. The reason is that `not`, which is not
+      safe (rule 18), is then elaborated before the recursion that
+      instantiates its variable.
+    - Strictly in turn but with `not` delayed until its variables are
+      instantiated, it computes `[1,3]` too. E90 p. 3 mentions "primitive
+      and user declared delay constructs" it does not describe.
+    - So the example favours the body in the literal's place without
+      proving it. The default follows it, as the simplest rule under which
+      E90's examples work without an undescribed delay.
     - *Experiment.* `--select fifo` gives the strictly fair literal rule
       (docs/research.md, E02).
 
@@ -286,9 +294,11 @@ The abbreviations are:
 - **The "simple control mechanisms"** of Absys-4 (E90 p. 3), and any
   primitive delay other than the ones above. Their form is unknown.
 - **The cost and ordering hints of F68** ("a number may be associated with
-  an assertion to indicate the cost of attempting it"). F68 is a proposal
-  written before the language existed.
+  an assertion to indicate the cost of attempting it"). F68 is a design
+  paper; it describes the system as then "partly implemented on an Elliott
+  4120", and nothing later shows these hints in Absys.
 - **The Elliott 4120 implementation itself.** It was written in machine
-  code, and no listing is known to survive (Reid 2011). This is a
+  code (Reid 2011 quotes Gray on its "tie-in to a manufacturers' machine
+  code"), and no listing of it is known to us. This is a
   reconstruction of the language as described, not an emulation of the
   program.
