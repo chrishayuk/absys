@@ -126,6 +126,12 @@ pp. 12-13), variable for variable.
   Absys gets all three. Coroutines on Foster's pass sets (`when/2`) and
   CLP(FD) recover them in modern Prolog. Only CLP(Q), which treats the
   equations as one system, solves x + y = 10, x - y = 4.
+- **The incremental session can be rebuilt in modern Prolog, but not
+  without building it** (E07). A SWI-Prolog engine fed one assertion at a
+  time keeps bindings, choice points and waiting coroutines between them,
+  and reproduces E03 and Elcock's 1982 relations posted one by one. A
+  procedure applied before it is defined still needs a layer of its own to
+  wait instead of raising an error.
 - **Fair search finds what depth-first search never reaches.**
   `{loop(A)} or {A = 1}` gives `A = 1` while the loop runs on. Left
   recursion over known data terminates under either search, because

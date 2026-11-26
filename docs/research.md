@@ -301,12 +301,34 @@ Findings:
   (labelling) to finish. CLP(Q) solves it outright, because it treats the
   two equations as one linear system: the "higher relation" Elcock asked
   for in 1982.
-- **What has no counterpart is the incremental session.** A procedure
-  applied before it exists is an error in Prolog, not a waiting
-  application. Each Prolog query is a computation of its own, so a later
-  query does not reach into a hibernating one, as `rev([5],[V])` does in
-  E03. Coroutines give that within one query; between queries, the binding
-  environment is gone.
+- **The incremental session has a modern counterpart, but it has to be
+  built.** At the Prolog top level each query is a computation of its own,
+  and a later query does not reach into an earlier one. But a SWI-Prolog
+  engine is a computation that can be suspended and handed more input.
+  `research/e07/e07-session.pl` runs a session in one engine, fed one
+  assertion at a time, and reports the bindings and the waiting goals after
+  each (recorded output in `research/e07/e07-session.out`):
+  - E03, assertion by assertion, ends as Absys does: A = B = [42,42,42],
+    C = [42,42]. So does the README's `rev([1,2,U], [V|L])` then
+    `rev([5], [V])`: U = V after the first, U = V = 5 after the second.
+  - Elcock's three relations of 1982, posted one at a time as coroutines,
+    wait between posts and resolve when `u+10 = 12` arrives: u = 2, v = 14,
+    w = 7. The waiting relations survive between inputs, as Absys's list of
+    relations did.
+  - A later assertion that refutes the current answer makes the engine
+    backtrack into an earlier assertion's alternatives: `c(X)` gives 1,
+    `X > 1` then gives 2, `X \= 2` gives 3. Absys keeps every derivation at
+    once; the engine holds one and the choice points to the others.
+  - Two things are not there without more work. An application of a
+    procedure not yet defined is an `existence_error`; the session above
+    makes it wait with a dozen lines of its own, and a definition wakes it.
+    And a built-in test on an unknown (`X > 1` before `c(X)`) is an
+    `instantiation_error`, where Absys would suspend it; coroutines would
+    have to be written around each such test.
+
+  So Absys's incremental session is reproducible in a modern Prolog, from
+  engines, coroutines and a layer for undefined procedures. What Absys had
+  was that as the ordinary way of running a program, not a construction.
 
 ## E09. Where does data-directed elaboration stop?
 

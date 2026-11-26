@@ -17,7 +17,7 @@ run(Label, Goal0, Show0) :-
     limit(L),
     catch(( call_with_inference_limit(Goal, L, R)
           -> ( R == inference_limit_exceeded -> Out = 'no answer: the inference limit ran out'
-             ; format(atom(Out), 'first answer: ~w', [Show]) )
+             ; copy_term(Show, S, _), numbervars(S, 0, _), format(atom(Out), 'first answer: ~W', [S, [numbervars(true)]]) )
           ;  Out = 'fails'
           ),
           E,

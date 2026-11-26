@@ -38,6 +38,9 @@ fn every_example_prints_its_out() {
 fn every_research_text_runs() {
     for e in fs::read_dir("research").unwrap() {
         let path = e.unwrap().path();
+        if !path.is_file() {
+            continue; // research/e07 holds the Prolog side of E07
+        }
         let name = path.to_string_lossy().to_string();
         let text = fs::read_to_string(&path).unwrap();
         let mut s = Session::new(Opts {

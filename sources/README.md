@@ -29,6 +29,8 @@ Also consulted:
     6* (1971).
   - Elcock, McGregor and Murray, "Data directed control and operating
     systems", *Computer J.* 15(2) (1972) 125-129.
+    The full paper is in *The Computer Journal* (Oxford University Press),
+    behind its paywall; only the HOPL extract has been read.
 
   Both were read in HOPL extracts (exp=356). They describe the "novalue"
   object that holds a list of waiting jobs, which they say is what FE69
@@ -40,7 +42,11 @@ Not seen:
 - E. W. Elcock and P. M. D. Gray, "Absys, equation solving and logic
   programming", TR 213, Dept. of Computer Science, University of Western
   Ontario (1988). This is E90's reference [9], which E90 says describes the
-  full Absys-4 language.
+  full Absys-4 language. A search (November 2026) found it cited but not
+  online. A separate 23-page report of 1988 from the same department,
+  "Absys: the first logic programming language: a retrospective and a
+  commentary", is listed in Google Books; it is presumably the report
+  version of E90, and has not been seen either.
 - E. W. Elcock, "Problem solving compilers", in Findler and Meltzer (eds.),
   *Artificial Intelligence and Heuristic Programming*, Edinburgh U.P.
   (1971). E90 says "more complex examples can be found" there.

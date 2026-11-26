@@ -38,3 +38,17 @@ jobs:
       - name: The editor extension
         working-directory: editors/vscode
         run: npm ci && node build.mjs && npm test
+
+  prolog:
+    # ABSYS-E07: the experiments on SWI-Prolog, pinned to the version they
+    # were recorded on, compared with the recorded output.
+    runs-on: ubuntu-latest
+    container: swipl:11.0.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: E07, the experiments
+        run: swipl -q research/e07/e07.pl | diff -u research/e07/e07.out -
+
+      - name: E07, the incremental session on an engine
+        run: swipl -q research/e07/e07-session.pl | diff -u research/e07/e07-session.out -

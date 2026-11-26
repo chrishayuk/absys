@@ -1,0 +1,47 @@
+
+E03 (research/e03-incremental.abs): the goal before its procedure
+  » A = [X, Y, Z]
+      [A=[X,Y,Z]]
+  » rev(A, B)
+      [A=[X,Y,Z]]
+      waiting for a definition: rev([X,Y,Z],B)
+  » X = Y
+      [A=[X,X,Z],Y=X]
+      waiting for a definition: rev([X,X,Z],B)
+  » def([(rev(R, S) :- rev1(R, [], S)), rev1([], S, S), (rev1([H|L], S, T) :- rev1(L, [H|S], T))])
+      [A=[X,X,Z],Y=X,B=[Z,X,X]]
+  » Y = Z
+      [A=[X,X,X],Y=X,Z=X,B=[X,X,X]]
+  » B = [42|C]
+      [A=[42,42,42],X=42,Y=42,Z=42,B=[42,42,42],C=[42,42]]
+
+README: rev([1,2,U], [V|L]), then rev([5], [V])
+  » def([(rev(R, S) :- rev1(R, [], S)), rev1([], S, S), (rev1([H|L], S, T) :- rev1(L, [H|S], T))])
+  » rev([1,2,U], [V|L])
+      [V=U,L=[2,1]]
+  » rev([5], [V])
+      [U=5,V=5,L=[2,1]]
+
+E06 (Elcock 1982), one relation at a time: u+v=16, w*u=v, u+10=12
+  » add(U, V, 16)
+      waiting: when((nonvar(U);nonvar(V);nonvar(U),nonvar(V)),user:add_(U,V,16))
+  » mul(W, U, V)
+      waiting: when((nonvar(U);nonvar(V);nonvar(U),nonvar(V)),user:add_(U,V,16))
+      waiting: when((nonvar(W),nonvar(V);nonvar(U),nonvar(V);nonvar(W),nonvar(U)),user:mul_(W,U,V))
+  » add(U, 10, 12)
+      [U=2,V=14,W=7]
+
+A later assertion that refutes the first alternative: Prolog backtracks into it
+  » def([c(1), c(2), c(3)])
+  » c(X)
+      [X=1]
+  » X > 1
+      [X=2]
+  » X \= 2
+      [X=3]
+
+The same, with the refuting assertion before the choice
+  » def([c(1), c(2), c(3)])
+  » X > 1
+      error: instantiation_error
+

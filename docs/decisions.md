@@ -192,7 +192,11 @@ The abbreviations are:
       implementations." So the designer's own accounts disagree: in 1982
       the implementation backtracked; in 1990 it "used a 'fair' search
       rule". Backtracking and fairness are compatible only if the
-      backtracking interleaved the branches, which E82 does not say.
+      backtracking interleaved the branches, which E82 does not say. One
+      reading reconciles them: "differential record keeping" is how a
+      branch's state was kept and restored (a trail), which says nothing
+      about the order in which branches were taken up. That reading is
+      ours; neither paper states it.
     - *Decision, on conflicting evidence.* The derivations here are
       elaborated fairly, as E90 says, which is also the "notional" meaning
       E82 gives. `--search depth-first` is the backtracking reading. Nothing
