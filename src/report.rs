@@ -78,11 +78,16 @@ pub fn state(s: &Session, show: Show, out: &mut String) {
             String::new()
         }
     ));
-    for d in derivs.iter().take(MAX_SHOWN) {
+    let shown = if crate::machine::FULL.load(std::sync::atomic::Ordering::Relaxed) {
+        usize::MAX
+    } else {
+        MAX_SHOWN
+    };
+    for d in derivs.iter().take(shown) {
         derivation(d, n, show, out);
     }
-    if derivs.len() > MAX_SHOWN {
-        out.push_str(&format!("  … and {} more\n", derivs.len() - MAX_SHOWN));
+    if derivs.len() > shown {
+        out.push_str(&format!("  … and {} more\n", derivs.len() - shown));
     }
 }
 

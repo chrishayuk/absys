@@ -25,6 +25,7 @@ options:
   --wake front|back       where a returned relation goes in the goal (default front)
   --measure               after each assertion, what the computation holds and the peak of each
                           quantity while it ran, on standard error (measurement only)
+  --full                  print lists and derivations in full, not cut short (measurement only)
   --notation 1990|1969|1982  (default from the file name: .ab1 is 1969, .ab2 1982, anything else 1990)";
 
 const DECISIONS: &str = include_str!("../docs/decisions.md");
@@ -64,6 +65,7 @@ fn args() -> Args {
             "--each" => a.show.each = true,
             "--env" => a.show.env = true,
             "--measure" => a.measure = true,
+            "--full" => absys::machine::FULL.store(true, std::sync::atomic::Ordering::Relaxed),
             "--search" => {
                 a.opts.search = match value(&mut i).as_str() {
                     "fair" => Search::Fair,

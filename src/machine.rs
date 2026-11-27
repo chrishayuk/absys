@@ -255,6 +255,19 @@ pub struct Deriv {
 /// Lists longer than this are shown cut short, with `…`.
 pub const MAX_ITEMS: usize = 32;
 
+/// `--full` (measurement only): print lists and derivations without cutting
+/// them short. Read only by the printers; nothing the machine computes
+/// depends on it.
+pub static FULL: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+fn max_items() -> usize {
+    if FULL.load(std::sync::atomic::Ordering::Relaxed) {
+        usize::MAX
+    } else {
+        MAX_ITEMS
+    }
+}
+
 const SUBSCRIPTS: [char; 10] = ['₀', '₁', '₂', '₃', '₄', '₅', '₆', '₇', '₈', '₉'];
 
 fn subscript(n: u32) -> String {
@@ -1096,6 +1109,9 @@ impl Deriv {
     }
 
     fn write(&self, v: &V, n: Notation, out: &mut String) {
+        if FULL.load(std::sync::atomic::Ordering::Relaxed) {
+            return self.write_full(v, n, out, &mut Vec::new());
+        }
         self.write_in(v, n, out, &mut Vec::new())
     }
 
@@ -1147,7 +1163,7 @@ impl Deriv {
                                 out.push_str(sep);
                             }
                             count += 1;
-                            if count > MAX_ITEMS {
+                            if count > max_items() {
                                 out.push('…');
                                 break;
                             }
@@ -1168,6 +1184,59 @@ impl Deriv {
                 }
                 path.truncate(depth);
                 out.push(']');
+            }
+        }
+    }
+
+    /// `--full`: lists in full, with cycles shown. A list cell met again
+    /// while it is still being printed (the term is cyclic: there is no
+    /// occur check) is printed as `↻`, meaning "the enclosing list again",
+    /// instead of being expanded for ever.
+    fn write_full(&self, v: &V, n: Notation, out: &mut String, path: &mut Vec<*const (V, V)>) {
+        match self.deref(v) {
+            V::Cons(first) if path.contains(&Rc::as_ptr(&first)) => out.push('↻'),
+            V::Cons(_) => {
+                let (sep, bar) = match n {
+                    Notation::Retrospective | Notation::Elcock1982 => (",", "|"),
+                    Notation::Absys1 => (";", "&"),
+                };
+                let depth = path.len();
+                out.push('[');
+                let mut cur = self.deref(v);
+                let mut count = 0;
+                loop {
+                    match cur {
+                        V::Cons(p) => {
+                            let ptr = Rc::as_ptr(&p);
+                            if path.contains(&ptr) {
+                                out.push_str(bar);
+                                out.push('↻');
+                                break;
+                            }
+                            path.push(ptr);
+                            if count > 0 {
+                                out.push_str(sep);
+                            }
+                            count += 1;
+                            self.write_full(&p.0, n, out, path);
+                            cur = self.deref(&p.1);
+                        }
+                        V::Nil => break,
+                        other => {
+                            out.push_str(bar);
+                            self.write_full(&other, n, out, path);
+                            break;
+                        }
+                    }
+                }
+                path.truncate(depth);
+                out.push(']');
+            }
+            other => {
+                // not a list: no cycle can pass through it
+                let saved = FULL.swap(false, std::sync::atomic::Ordering::Relaxed);
+                self.write(&other, n, out);
+                FULL.store(saved, std::sync::atomic::Ordering::Relaxed);
             }
         }
     }
