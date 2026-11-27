@@ -347,3 +347,30 @@ The abbreviations are:
   code"), and no listing of it is known to us. This is a
   reconstruction of the language as described, not an emulation of the
   program.
+
+## Defects found in the reconstruction
+
+Faults of this program, not decisions about Absys. Each is fixed in a
+commit of its own, and the commit before it is kept as the reference for
+everything else it does.
+
+1. **Printing a list that contains itself overflowed the stack.**
+   *Found* 2026-11-27, while qualifying measurement for the
+   computational-paradigms study, whose problem P01c poses `x = [x]`.
+   *In* every commit up to and including 7bb61e6.
+   - There is no occur check (decision on equality above), so `x = [x]`
+     succeeds and binds x to a list whose element is x. The machine
+     computed this correctly. The printer then expanded the element for
+     ever, and the run ended with "stack overflow" after the computation
+     had finished, before its answer was shown.
+   - A cycle through a list's tail (`x = [1|x]`) never had the fault: the
+     printer cuts any list after 32 elements.
+   - *Fix.* Only the printer changes. A list element that is one of the
+     list cells being printed around it is printed as `↻`, so `x = [x]`
+     prints `[↻]` and `x = [1, x]` prints `[1,↻]`. Tail cycles print as
+     before. `tests/cyclic.rs` covers both kinds of cycle, cycles through
+     several variables and into the middle of a list, and shared terms
+     that are not cyclic.
+   - *Check.* Against 7bb61e6, every example and research text, in eight
+     output modes and as JSON, prints byte for byte the same (160 runs).
+     Only runs that crashed before print differently.

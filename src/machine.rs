@@ -1096,6 +1096,15 @@ impl Deriv {
     }
 
     fn write(&self, v: &V, n: Notation, out: &mut String) {
+        self.write_in(v, n, out, &mut Vec::new())
+    }
+
+    /// `path` holds the list cells being printed around `v`. A list element
+    /// that is one of them makes the term cyclic through its elements (there
+    /// is no occur check: `X = [X]`), and is printed as `↻` instead of being
+    /// expanded until the stack overflows. A cycle through a list's tail is
+    /// already cut short by `MAX_ITEMS`, and is printed as before.
+    fn write_in(&self, v: &V, n: Notation, out: &mut String, path: &mut Vec<*const (V, V)>) {
         match self.deref(v) {
             V::Var(x) => out.push_str(&self.cells[x as usize].name),
             V::Num(k) => out.push_str(&k.to_string()),
@@ -1127,6 +1136,7 @@ impl Deriv {
                     Notation::Retrospective | Notation::Elcock1982 => (",", "|"),
                     Notation::Absys1 => (";", "&"),
                 };
+                let depth = path.len();
                 out.push('[');
                 let mut cur = self.deref(v);
                 let mut count = 0;
@@ -1141,17 +1151,22 @@ impl Deriv {
                                 out.push('…');
                                 break;
                             }
-                            self.write(&p.0, n, out);
+                            path.push(Rc::as_ptr(&p));
+                            match self.deref(&p.0) {
+                                V::Cons(e) if path.contains(&Rc::as_ptr(&e)) => out.push('↻'),
+                                _ => self.write_in(&p.0, n, out, path),
+                            }
                             cur = self.deref(&p.1);
                         }
                         V::Nil => break,
                         other => {
                             out.push_str(bar);
-                            self.write(&other, n, out);
+                            self.write_in(&other, n, out, path);
                             break;
                         }
                     }
                 }
+                path.truncate(depth);
                 out.push(']');
             }
         }
