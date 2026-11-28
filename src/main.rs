@@ -25,6 +25,8 @@ options:
   --wake front|back       where a returned relation goes in the goal (default front)
   --measure               after each assertion, what the computation holds and the peak of each
                           quantity while it ran, on standard error (measurement only)
+  --peak-every N          with --measure, take the peak every N steps (default 1, every step:
+                          exact; 0: only at the start and end of each assertion; otherwise sampled)
   --full                  print lists and derivations in full, not cut short (measurement only)
   --notation 1990|1969|1982  (default from the file name: .ab1 is 1969, .ab2 1982, anything else 1990)";
 
@@ -36,6 +38,7 @@ struct Args {
     budget: usize,
     notation: Option<Notation>,
     measure: bool,
+    peak_every: usize,
     rest: Vec<String>,
 }
 
@@ -52,6 +55,7 @@ fn args() -> Args {
         budget: DEFAULT_BUDGET,
         notation: None,
         measure: false,
+        peak_every: 1,
         rest: vec![],
     };
     let mut i = 0;
@@ -65,6 +69,9 @@ fn args() -> Args {
             "--each" => a.show.each = true,
             "--env" => a.show.env = true,
             "--measure" => a.measure = true,
+            "--peak-every" => {
+                a.peak_every = value(&mut i).parse().unwrap_or_else(|_| fail("--peak-every N"))
+            }
             "--full" => absys::machine::FULL.store(true, std::sync::atomic::Ordering::Relaxed),
             "--search" => {
                 a.opts.search = match value(&mut i).as_str() {
@@ -180,6 +187,7 @@ fn main() {
             let mut s = Session::new(a.opts);
             s.budget = a.budget;
             s.measuring = a.measure;
+            s.peak_every = a.peak_every;
             match run(&mut s, &text, a.show) {
                 Ok(out) => print!("{out}"),
                 Err(e) => report_error(f, &text, &e),

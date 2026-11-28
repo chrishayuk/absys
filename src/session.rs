@@ -41,8 +41,12 @@ pub struct Session {
     pub reports: Vec<Report>,
     /// every derivation has failed: the text is unsatisfiable
     pub dead: bool,
-    /// sample `Comp::measure` after every step (measurement only)
+    /// sample `Comp::measure` while elaborating (measurement only)
     pub measuring: bool,
+    /// with `measuring`: update the peak every this many steps (1, the
+    /// default: every step; 0: only when an assertion is added and when its
+    /// elaboration ends). The peak is exact at 1 and sampled otherwise.
+    pub peak_every: usize,
     peak: Measure,
 }
 
@@ -55,6 +59,7 @@ impl Session {
             reports: vec![],
             dead: false,
             measuring: false,
+            peak_every: 1,
             peak: Measure::default(),
         }
     }
@@ -75,9 +80,12 @@ impl Session {
             if !self.comp.step(&mut self.cx) {
                 break;
             }
-            if self.measuring {
+            if self.measuring && self.peak_every > 0 && (self.cx.steps - start) % self.peak_every == 0 {
                 self.peak = self.peak.max(&self.comp.measure());
             }
+        }
+        if self.measuring && self.peak_every != 1 {
+            self.peak = self.peak.max(&self.comp.measure());
         }
         if self.comp.derivs.is_empty() {
             self.dead = true;
